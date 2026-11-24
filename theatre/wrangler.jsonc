@@ -1,0 +1,24 @@
+{
+  // One theatre = one deployment of this Worker. Deploy the same code to several Cloudflare
+  // accounts, giving each a unique THEATRE_ID / THEATRE_NAME (see README).
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "kino-theatre",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-11-01",
+  "observability": { "enabled": true },
+
+  "vars": {
+    "THEATRE_ID": "local",
+    "THEATRE_NAME": "Local"
+  },
+
+  "durable_objects": {
+    "bindings": [
+      { "name": "SCREEN", "class_name": "ScreenDO" },
+      { "name": "LOBBY", "class_name": "LobbyDO" }
+    ]
+  },
+
+  // SQLite-backed Durable Objects are available on the Workers free plan.
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["ScreenDO", "LobbyDO"] }]
+}

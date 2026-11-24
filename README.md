@@ -50,8 +50,8 @@ Tasks are worked through in order and checked off as they are completed. Windows
 | 0.4  | Repo layout                   | This repo = theatre + protocol + docs; one repo per native client                        | ✅     |
 | 0.5  | Native stack per platform     | Windows: C# / WinUI 3 + libmpv (others decided, on hold)                                 | ✅     |
 | 0.6  | Windows repo setup            | `kino-enhanced-windows` initialised                                                      | ✅     |
-| 0.7  | Shared protocol specification | Versioned, language-neutral message schemas in `protocol/`                               | ⬜     |
-| 0.8  | Protocol compatibility policy | Version handshake; "update required" on mismatch                                         | ⬜     |
+| 0.7  | Shared protocol specification | Versioned message spec + canonical examples in `protocol/` (contract-tested on both sides) | ✅     |
+| 0.8  | Protocol compatibility policy | `hello.protocol` checked against `minProtocol`; `update_required` on mismatch            | ✅     |
 | 0.9  | Lint, format, test tooling    | Per repo                                                                                 | ⬜     |
 | 0.10 | CI pipeline                   | Build + test on push in every repo                                                       | ⬜     |
 
@@ -59,14 +59,14 @@ Tasks are worked through in order and checked off as they are completed. Windows
 
 | #     | Task                              | Details                                                                                 | Status |
 | ----- | --------------------------------- | --------------------------------------------------------------------------------------- | ------ |
-| 1.1   | Worker project scaffold           | One codebase, deployable to many Cloudflare accounts                                    | ⬜     |
+| 1.1   | Worker project scaffold           | TypeScript Worker in `theatre/`; runs locally with `wrangler dev`                       | ✅     |
 | 1.2   | Multi-account deployment          | Deploy the same Worker to several accounts; per-account config                          | ⬜     |
 | 1.3   | Unique theatre naming             | Each theatre has a unique id and name                                                   | ⬜     |
 | 1.4   | Dynamic theatre list              | `servers.json` on Cloudflare Pages, with cached and bundled fallbacks                   | ⬜     |
-| 1.5   | `/info` endpoint                  | Name, protocol version, status; also used as the latency probe                          | ⬜     |
-| 1.6   | Real-time connection layer        | WebSockets to one Durable Object per screen, using the Hibernation API                  | ⬜     |
-| 1.7   | Screen state storage              | Durable Object storage (SQLite-backed, free tier)                                       | ⬜     |
-| 1.8   | Lobby Durable Object              | Per-theatre listing of discoverable screens                                             | ⬜     |
+| 1.5   | `/info` endpoint                  | Name, protocol version, status; also used as the latency probe                          | ✅     |
+| 1.6   | Real-time connection layer        | WebSockets to one Durable Object per screen, using the Hibernation API                  | ✅     |
+| 1.7   | Screen state storage              | Durable Object storage (SQLite-backed, free tier)                                       | ✅     |
+| 1.8   | Lobby Durable Object              | Per-theatre listing of discoverable screens                                             | ✅     |
 | 1.9   | Free-tier budget design           | Event-based anchors, rare re-syncs, state-change-only reports                           | ⬜     |
 | 1.10  | Quota handling                    | Theatre marked unavailable when its daily quota is exhausted                            | ⬜     |
 | 1.11  | Abuse protection                  | Rate limiting, payload size limits, input validation                                    | ⬜     |
@@ -77,26 +77,26 @@ Tasks are worked through in order and checked off as they are completed. Windows
 | #     | Task                              | Details                                                                                 | Status |
 | ----- | --------------------------------- | --------------------------------------------------------------------------------------- | ------ |
 | 2.1   | Naming                            | Theatre / Screen / Host / Co-host / Viewer                                              | ✅     |
-| 2.2   | Create screen                     | Host must enter a screen name before it is created                                      | ⬜     |
-| 2.3   | Unique backend screen ID          | Internal ID, never shown anywhere in the UI                                             | ⬜     |
-| 2.4   | Non-unique names                  | Screen names and viewer names do not have to be unique                                  | ⬜     |
-| 2.5   | Join screen                       | Anyone can join any public screen                                                       | ⬜     |
+| 2.2   | Create screen                     | Host must enter a screen name before it is created                                      | ✅     |
+| 2.3   | Unique backend screen ID          | Internal ID, never shown anywhere in the UI                                             | ✅     |
+| 2.4   | Non-unique names                  | Screen names and viewer names do not have to be unique                                  | ✅     |
+| 2.5   | Join screen                       | Join works (code + per-screen token); lobby UI pending                                  | 🟨    |
 | 2.6   | Leave screen                      | Clean leave; reconnect grace period                                                     | ⬜     |
 | 2.7   | Viewer list                       | Host, co-hosts and viewers, with status icons                                           | ⬜     |
 | 2.8   | Host controls the screen          | The host has full control by default                                                    | ⬜     |
 | 2.9   | Viewer cap                        | Default maximum of 10, configurable by the host                                         | ⬜     |
 | 2.10  | Screen settings                   | Name, visibility, password, devices toggle, buffering policy, auto-advance              | ⬜     |
-| 2.11  | Screen lifecycle                  | Closes on host close, host absence timeout, or empty timeout                            | ⬜     |
+| 2.11  | Screen lifecycle                  | Empty-screen cleanup via DO alarm done; host-absence timeout pending                    | 🟨    |
 
 ### 3. Identity & Reconnect (no accounts)
 
 | #     | Task                              | Details                                                                                 | Status |
 | ----- | --------------------------------- | --------------------------------------------------------------------------------------- | ------ |
-| 3.1   | No accounts                       | Display name only                                                                       | ⬜     |
-| 3.2   | Device secret                     | Random secret generated and stored on the device                                        | ⬜     |
-| 3.3   | Per-screen token                  | HMAC(deviceSecret, screenId), so viewers can't be tracked across screens                | ⬜     |
-| 3.4   | Reconnect with same identity      | Roles, permissions and host status are restored                                         | ⬜     |
-| 3.5   | Host ownership by token           | The host is identified by the owner token, not the name                                 | ⬜     |
+| 3.1   | No accounts                       | Display name only                                                                       | ✅     |
+| 3.2   | Device secret                     | Random secret generated and stored on the device                                        | ✅     |
+| 3.3   | Per-screen token                  | HMAC(deviceSecret, screenId), so viewers can't be tracked across screens                | ✅     |
+| 3.4   | Reconnect with same identity      | Same token on reconnect restores identity and host status; roles pending RBAC           | 🟨    |
+| 3.5   | Host ownership by token           | The host is identified by the owner token, not the name                                 | ✅     |
 
 ### 4. Host Handover
 
@@ -135,7 +135,7 @@ Tasks are worked through in order and checked off as they are completed. Windows
 | #     | Task                              | Details                                                                                 | Status |
 | ----- | --------------------------------- | --------------------------------------------------------------------------------------- | ------ |
 | 7.1   | Unified lobby screen              | Screens from **all** theatres in one list, with no dropdown                             | ⬜     |
-| 7.2   | Parallel fetch across theatres    | Query every theatre at once and merge the results                                       | ⬜     |
+| 7.2   | Parallel fetch across theatres    | `GET /lobby` per theatre done; client-side parallel merge pending                       | 🟨    |
 | 7.3   | Theatre badge per screen          | Each listed screen shows its theatre                                                    | ⬜     |
 | 7.4   | Theatre latency indicator         | Ping to each theatre                                                                    | ⬜     |
 | 7.5   | Public screens                    | Always listed; anyone can join                                                          | ⬜     |
@@ -149,11 +149,11 @@ Tasks are worked through in order and checked off as they are completed. Windows
 
 | #     | Task                              | Details                                                                                 | Status |
 | ----- | --------------------------------- | --------------------------------------------------------------------------------------- | ------ |
-| 8.1   | Screen code                       | 6-char code, separate from the hidden ID                                                | ⬜     |
+| 8.1   | Screen code                       | 6-char code, separate from the hidden ID                                                | ✅     |
 | 8.2   | Invite link                       | `kino://join/<theatre>/<code>` plus a web link                                          | ⬜     |
-| 8.3   | Join by code                      | Code is resolved across all theatres in parallel                                        | ⬜     |
-| 8.4   | Private join                      | Code or link plus a password prompt                                                     | ⬜     |
-| 8.5   | Password security                 | PBKDF2 hash; limit on attempts                                                          | ⬜     |
+| 8.3   | Join by code                      | `/resolve/<code>` done; querying all theatres in parallel pending                       | 🟨    |
+| 8.4   | Private join                      | Code plus password; wrong password rejected                                             | ✅     |
+| 8.5   | Password security                 | PBKDF2-SHA256 hashing done; attempt limiting pending                                    | 🟨    |
 | 8.6   | Regenerate code                   | Old code and link stop working                                                          | ⬜     |
 
 ### 9. Device & Latency Visibility
@@ -172,8 +172,8 @@ Tasks are worked through in order and checked off as they are completed. Windows
 | #     | Task                              | Details                                                                                 | Status |
 | ----- | --------------------------------- | --------------------------------------------------------------------------------------- | ------ |
 | 10.1  | Windows: libmpv integration       | Embedded in WinUI 3 via a child HWND; overlays via windowed popups (prototype works)    | 🟨     |
-| 10.2  | Core playback                     | Play, pause, seek, stop, next, previous (play/pause/seek done)                          | 🟨     |
-| 10.3  | Smooth playback-rate control      | Fine-grained `speed` with pitch correction (exposed; sync engine will drive it)         | 🟨     |
+| 10.2  | Core playback                     | Play/pause/seek done and synced; stop/next/previous pending                             | 🟨     |
+| 10.3  | Smooth playback-rate control      | libmpv `speed` + scaletempo2 pitch correction, driven by the sync engine                | ✅      |
 | 10.4  | Audio track selection             | Choose among a file's audio tracks                                                      | ⬜     |
 | 10.5  | Fullscreen                        | Windows                                                                                 | ⬜     |
 | 10.6  | Keyboard shortcuts                | Space, arrows, F, M, etc.                                                               | ⬜     |
@@ -183,17 +183,17 @@ Tasks are worked through in order and checked off as they are completed. Windows
 
 | #     | Task                              | Details                                                                                 | Status |
 | ----- | --------------------------------- | --------------------------------------------------------------------------------------- | ------ |
-| 11.1  | Sync only, no streaming           | Only state and time are sent                                                            | ⬜     |
-| 11.2  | Clock synchronisation             | NTP-style; 8-sample burst, best 3, median; re-sync every 2 min                          | ⬜     |
-| 11.3  | Timeline anchors                  | (item, state, position, rate, theatre time, seq)                                        | ⬜     |
-| 11.4  | Latency compensation              | Expected position computed locally from the anchor and clock offset                     | ⬜     |
-| 11.5  | Scheduled start                   | Play/resume take effect at a shared future moment                                       | ⬜     |
-| 11.6  | Drift measurement                 | 250 ms sampling, median filter, settling windows                                        | ⬜     |
-| 11.7  | Green zone with hysteresis        | Enter 0.25 s / exit 0.08 s                                                              | ⬜     |
-| 11.8  | Smooth rate controller            | ±5% max, 0.5%/s slew, no-overshoot cap, pitch preserved                                 | ⬜     |
-| 11.9  | Hard seek fallback                | Above 3 s, with seek-latency compensation                                               | ⬜     |
-| 11.10 | Host re-anchor                    | Host sends a fresh anchor if its own drift exceeds 0.25 s                               | ⬜     |
-| 11.11 | Late join / reconnect catch-up    | Clock burst, snapshot, seek                                                             | ⬜     |
+| 11.1  | Sync only, no streaming           | Only state and time are sent                                                            | ✅     |
+| 11.2  | Clock synchronisation             | NTP-style; 8-sample burst, best 3, median; re-sync every 2 min                          | ✅     |
+| 11.3  | Timeline anchors                  | (item, state, position, rate, theatre time, seq)                                        | ✅     |
+| 11.4  | Latency compensation              | Expected position computed locally from the anchor and clock offset                     | ✅     |
+| 11.5  | Scheduled start                   | Play/resume take effect at a shared future moment                                       | ✅     |
+| 11.6  | Drift measurement                 | 250 ms sampling, median filter, settling windows                                        | ✅     |
+| 11.7  | Green zone with hysteresis        | Enter 0.25 s / exit 0.08 s                                                              | ✅     |
+| 11.8  | Smooth rate controller            | ±5% max, 0.5%/s slew, no-overshoot cap; verified live (1.5 s knock recovered in ~45 s)  | ✅     |
+| 11.9  | Hard seek fallback                | Above 3 s, with learned seek-latency compensation                                       | ✅     |
+| 11.10 | Host re-anchor                    | Host sends a fresh anchor if its own drift exceeds 0.25 s                               | ✅     |
+| 11.11 | Late join / reconnect catch-up    | Clock burst, snapshot, seek                                                             | ✅     |
 | 11.12 | Buffering policy                  | Keep playing (default) / Wait for everyone, with host override                          | ⬜     |
 | 11.13 | Playlist transitions              | Auto-advance; waiting state for viewers whose copy ends early                           | ⬜     |
 | 11.14 | Ready check                       | Prompt, live tally, 30 s timeout                                                        | ⬜     |
@@ -203,7 +203,7 @@ Tasks are worked through in order and checked off as they are completed. Windows
 
 | #     | Task                              | Details                                                                                 | Status |
 | ----- | --------------------------------- | --------------------------------------------------------------------------------------- | ------ |
-| 12.1  | Pick a single local file          | Each viewer picks their own copy                                                        | ⬜     |
+| 12.1  | Pick a single local file          | Each viewer picks their own copy                                                        | ✅     |
 | 12.2  | Pick a local folder               | The folder's media becomes the play order                                               | ⬜     |
 | 12.3  | Multi-select local files          | Alternative to picking a folder                                                         | ⬜     |
 | 12.4  | Default order A–Z                 | Natural sort                                                                            | ⬜     |
