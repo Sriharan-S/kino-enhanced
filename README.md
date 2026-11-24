@@ -171,9 +171,9 @@ Tasks are worked through in order and checked off as they are completed. Windows
 
 | #     | Task                              | Details                                                                                 | Status |
 | ----- | --------------------------------- | --------------------------------------------------------------------------------------- | ------ |
-| 10.1  | Windows: libmpv integration       | Embedding in WinUI 3, with overlays on top (prototype first)                            | ⬜     |
-| 10.2  | Core playback                     | Play, pause, seek, stop, next, previous                                                 | ⬜     |
-| 10.3  | Smooth playback-rate control      | Fine-grained `speed` with pitch correction                                              | ⬜     |
+| 10.1  | Windows: libmpv integration       | Embedded in WinUI 3 via a child HWND; overlays via windowed popups (prototype works)    | 🟨     |
+| 10.2  | Core playback                     | Play, pause, seek, stop, next, previous (play/pause/seek done)                          | 🟨     |
+| 10.3  | Smooth playback-rate control      | Fine-grained `speed` with pitch correction (exposed; sync engine will drive it)         | 🟨     |
 | 10.4  | Audio track selection             | Choose among a file's audio tracks                                                      | ⬜     |
 | 10.5  | Fullscreen                        | Windows                                                                                 | ⬜     |
 | 10.6  | Keyboard shortcuts                | Space, arrows, F, M, etc.                                                               | ⬜     |
