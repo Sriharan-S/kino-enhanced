@@ -26,3 +26,6 @@ Thumbs.db
 # Cloudflare Wrangler
 .wrangler/
 .dev.vars
+
+# Per-theatre Cloudflare credentials (API tokens): never commit
+theatre/accounts/*.env

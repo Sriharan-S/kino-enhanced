@@ -5,6 +5,7 @@
 // kino-<id>, so its URL is https://kino-<id>.<account-subdomain>.workers.dev.
 // After deploying, it waits until /info reports this deployment, so tests run right after never hit the old version.
 import { spawnSync } from "node:child_process";
+import { existsSync, readFileSync } from "node:fs";
 
 const [id, name] = process.argv.slice(2);
 if (!id || !name || !/^[a-z][a-z0-9-]{1,30}$/.test(id)) {
@@ -14,6 +15,17 @@ if (!id || !name || !/^[a-z][a-z0-9-]{1,30}$/.test(id)) {
 
 // Corporate TLS-inspecting proxies (e.g. Zscaler) need Node to trust the OS certificate store.
 const env = { ...process.env, NODE_USE_SYSTEM_CA: "1" };
+
+// Each theatre lives on its own Cloudflare account. accounts/<id>.env (git-ignored) holds that account's
+// CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID; without it, Wrangler's logged-in account is used.
+const accountFile = new URL(`../accounts/${id}.env`, import.meta.url);
+if (existsSync(accountFile)) {
+  for (const line of readFileSync(accountFile, "utf8").split(/\r?\n/)) {
+    const m = /^\s*(CLOUDFLARE_API_TOKEN|CLOUDFLARE_ACCOUNT_ID)\s*=\s*(\S+)\s*$/.exec(line);
+    if (m) env[m[1]] = m[2];
+  }
+  console.log(`Using the Cloudflare account in accounts/${id}.env`);
+}
 const stamp = new Date().toISOString();
 
 const args = [
