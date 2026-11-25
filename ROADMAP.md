@@ -125,10 +125,10 @@ Counts every row in the phase tables (sub-tasks included); "—" rows are left o
 | 4 | ✅ 4 · ⬜ 1 | ✅ 9 · 🟨 3 · ⬜ 1 | ✅ 8 · 🟨 4 · ⬜ 1 | ⏸ 13 | ⏸ 13 |
 | 5 | ✅ 22 · 🟨 3 | ✅ 19 · 🟨 3 | ✅ 13 · 🟨 9 | ⏸ 22 | ⏸ 22 |
 | 6 | ✅ 7 · ⬜ 1 | ✅ 6 · 🟨 2 · ⬜ 1 | ✅ 5 · 🟨 3 · ⬜ 1 | ⏸ 9 | ⏸ 9 |
-| 7 | ✅ 8 | ✅ 6 | 🟨 1 · ⬜ 5 | ⏸ 6 | ⏸ 6 |
-| 8 | ✅ 12 | ✅ 11 · 🟨 2 | ✅ 3 · 🟨 1 · ⬜ 9 | ⏸ 13 | ⏸ 13 |
-| 9 | ✅ 4 | ✅ 5 | ✅ 1 · ⬜ 4 | ⏸ 5 | ⏸ 5 |
-| 10 | ✅ 6 | ✅ 10 · 🟨 1 | ✅ 8 · 🟨 2 · ⬜ 1 | ⏸ 11 | ⏸ 11 |
+| 7 | ✅ 8 | ✅ 6 | 🟨 6 | ⏸ 6 | ⏸ 6 |
+| 8 | ✅ 12 | ✅ 11 · 🟨 2 | ✅ 3 · 🟨 10 | ⏸ 13 | ⏸ 13 |
+| 9 | ✅ 4 | ✅ 5 | ✅ 1 · 🟨 4 | ⏸ 5 | ⏸ 5 |
+| 10 | ✅ 6 | ✅ 10 · 🟨 1 | ✅ 8 · 🟨 3 | ⏸ 11 | ⏸ 11 |
 | 11 | ✅ 14 · ⬜ 1 | ✅ 25 · 🟨 1 · ⬜ 2 | ✅ 20 · 🟨 6 · ⬜ 2 | ⏸ 28 | ⏸ 28 |
 | 12 | — | ✅ 4 · 🟨 4 · ⬜ 2 | ✅ 6 · 🟨 1 · ⬜ 4 | ⏸ 11 | ⏸ 10 |
 | 13 | ✅ 7 | ✅ 19 · 🟨 2 · ⬜ 1 | ✅ 15 · 🟨 4 · ⬜ 3 | ⏸ 22 | ⏸ 22 |
@@ -142,7 +142,7 @@ Counts every row in the phase tables (sub-tasks included); "—" rows are left o
 | 21 | ✅ 1 · ⬜ 13 | ✅ 1 · 🟨 1 · ⬜ 14 | ✅ 3 · 🟨 1 · ⬜ 13 | ⏸ 14 | ⏸ 14 |
 | 22 | ⏸ 4 | ⏸ 3 | ⏸ 3 | ⏸ 3 | ⏸ 3 |
 | 23 | ⬜ 23 | ⬜ 26 | ⬜ 28 | ⬜ 27 | ⬜ 26 |
-| **All** | **✅ 137 · 🟨 4 · ⬜ 45 · ⏸ 4** | **✅ 169 · 🟨 34 · ⬜ 49 · ⏸ 3** | **✅ 118 · 🟨 41 · ⬜ 97 · ⏸ 3** | **⬜ 27 · ⏸ 228** | **⬜ 26 · ⏸ 227** |
+| **All** | **✅ 137 · 🟨 4 · ⬜ 45 · ⏸ 4** | **✅ 169 · 🟨 34 · ⬜ 49 · ⏸ 3** | **✅ 118 · 🟨 60 · ⬜ 78 · ⏸ 3** | **⬜ 27 · ⏸ 228** | **⬜ 26 · ⏸ 227** |
 
 ---
 
@@ -819,14 +819,14 @@ Acceptance criteria:
 
 | ID | Task | § | Th | Win | Web | And | Lin | Tests / notes |
 |---|---|---|---|---|---|---|---|---|
-| C-7.1 | Appoint and remove co-hosts | §7.1, R4.1 | ✅ | ✅ | ⬜ | ⏸ | ⏸ | Th smoke; Win live. Web: `session.setCoHost` exists, no UI |
-| C-7.2 | Co-host priority order | §7.1, R4.1 | ✅ | ✅ | ⬜ | ⏸ | ⏸ | Web: `moveCoHost` exists, no UI |
-| C-7.3 | Away co-hosts listed | §7.1, R2.7 | ✅ | ✅ | ⬜ | ⏸ | ⏸ | Web ignores the `cohosts` list in the UI |
-| C-7.4 | Acting host takes over the timeline | §7.2, R4.2 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th smoke; Win live. Web: badge and engine switch work; no automated test |
-| C-7.5 | Acting host limits | §7.2 | ✅ | ✅ | ⬜ | ⏸ | ⏸ | Web has none of the host-only controls yet |
+| C-7.1 | Appoint and remove co-hosts | §7.1, R4.1 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th smoke; Win live. Web: "Make co-host" / "Remove co-host" in the host's viewer menu, full ordered list sent (unit, browser test); by-hand check pending |
+| C-7.2 | Co-host priority order | §7.1, R4.1 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Web: "Move up (takes over sooner)" / "Move down" (unit); by-hand check pending |
+| C-7.3 | Away co-hosts listed | §7.1, R2.7 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Web: "Away: name (co-host #n)" rows from `cohosts`, with remove and reorder; by-hand check pending |
+| C-7.4 | Acting host takes over the timeline | §7.2, R4.2 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th smoke; Win live. Web: badge and engine switch; live test `a co-host stands in while the host is away`; by-hand check pending |
+| C-7.5 | Acting host limits | §7.2 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Web: the acting host is never offered co-host changes, ownership or closing, or actions on co-hosts (unit); by-hand check pending |
 | C-7.6 | No co-host present | §7.3, R4.3 | ✅ | — | — | — | — | |
 | C-7.7 | Host returns and takes over | §7.4, R4.4 | ✅ | — | — | — | — | Th smoke. Client side is C-7.4 |
-| C-7.8 | Transfer ownership | §7.5, R4.6 | ✅ | ✅ | ⬜ | ⏸ | ⏸ | Th smoke |
+| C-7.8 | Transfer ownership | §7.5, R4.6 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th smoke. Web: "Make host…" asks "Make X the host? You become co-host #1"; browser test hands over and back; by-hand check pending |
 
 #### C-7.1 Appoint and remove co-hosts
 Acceptance criteria: only the host (not the acting host) sees "Make co-host" and "Remove co-host" in a viewer's menu;
@@ -876,20 +876,20 @@ host name updates.
 | ID | Task | § | Th | Win | Web | And | Lin | Tests / notes |
 |---|---|---|---|---|---|---|---|---|
 | C-8.1 | Permission catalogue (19 permissions) | §8.1, R5.1 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Th unit; Win unit (`Rank_matches_the_theatre`) |
-| C-8.2 | Role model and limits | §8.2, R5.2 | ✅ | 🟨 | ⬜ | ⏸ | ⏸ | Th unit. Win: the 20-role cap isn't checked before sending |
+| C-8.2 | Role model and limits | §8.2, R5.2 | ✅ | 🟨 | 🟨 | ⏸ | ⏸ | Th unit. Win: the 20-role cap isn't checked before sending. Web: name 1–32, colour or none, rank 1 to your rank − 1; "New role" disabled at 20 with the reason; by-hand check pending |
 | C-8.3 | Default roles | §8.3, R5.3 | ✅ | — | — | — | — | Th unit |
 | C-8.4 | Resolution order; effective permissions from the theatre | §8.4 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Th unit; Win unit (parse); clients never compute permissions |
-| C-8.5 | Roles page | §8.2, R5.4 | ✅ | ✅ | ⬜ | ⏸ | ⏸ | Th smoke; Win UI: manual |
-| C-8.5.1 | List roles by rank, with colour | §8.2 | — | ✅ | ⬜ | ⏸ | ⏸ | |
-| C-8.5.2 | Create a role | §8.2 | ✅ | ✅ | ⬜ | ⏸ | ⏸ | |
-| C-8.5.3 | Edit a role | §8.2 | ✅ | ✅ | ⬜ | ⏸ | ⏸ | |
-| C-8.5.4 | Delete a role | §8.2 | ✅ | ✅ | ⬜ | ⏸ | ⏸ | |
-| C-8.5.5 | Built-in roles: Viewer permissions only; Co-host read-only | §8.3 | ✅ | ✅ | ⬜ | ⏸ | ⏸ | |
-| C-8.6 | Assign roles to viewers | §8.2, R5.5 | ✅ | ✅ | ⬜ | ⏸ | ⏸ | |
-| C-8.7 | Per-viewer overrides: Inherit, Allow, Deny | §8.4, R5.6 | ✅ | ✅ | ⬜ | ⏸ | ⏸ | |
+| C-8.5 | Roles page | §8.2, R5.4 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th smoke; Win UI: manual. Web: roles page from the Viewers tab; theatre rejections shown on the page; by-hand check pending |
+| C-8.5.1 | List roles by rank, with colour | §8.2 | — | ✅ | 🟨 | ⏸ | ⏸ | Web: by rank, with colour dot and rank; locked roles marked; by-hand check pending |
+| C-8.5.2 | Create a role | §8.2 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Web: browser test creates a role; permissions you don't hold are disabled with "You don't have this permission"; by-hand check pending |
+| C-8.5.3 | Edit a role | §8.2 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Web: only roles below you (unit); by-hand check pending |
+| C-8.5.4 | Delete a role | §8.2 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Web: custom roles below you, with confirmation (unit); by-hand check pending |
+| C-8.5.5 | Built-in roles: Viewer permissions only; Co-host read-only | §8.3 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Web: Viewer permissions only; Co-host read-only (unit); by-hand check pending |
+| C-8.6 | Assign roles to viewers | §8.2, R5.5 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Web: role toggles in the viewer menu, only with `roles.assign`, for roles and viewers below you (unit, browser test); by-hand check pending |
+| C-8.7 | Per-viewer overrides: Inherit, Allow, Deny | §8.4, R5.6 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Web: "Permissions…" with Inherit (showing what roles give), Allow (disabled when you don't hold it) and Deny; full lists sent (browser test); by-hand check pending |
 | C-8.8 | Enforcement in the Screen DO | §8.5, R5.7 | ✅ | — | — | — | — | Th unit, Th smoke (no escalation) |
-| C-8.9 | Permission-aware UI | §8.5, R5.8 | — | 🟨 | 🟨 | ⏸ | ⏸ | Win: everything except `screen.invite` (C-6.11). Web: playback, playlist, auto-advance and regenerate follow permissions; the rest has no UI |
-| C-8.10 | Roles shown in the viewer list | §8.2, R2.7 | — | ✅ | ✅ | ⏸ | ⏸ | Win: role names as text with a colour dot; Web: coloured chips |
+| C-8.9 | Permission-aware UI | §8.5, R5.8 | — | 🟨 | 🟨 | ⏸ | ⏸ | Win: everything except `screen.invite` (C-6.11). Web: playback, playlist, settings, ready check, invite, chat, moderation and roles follow the effective permissions; by-hand check pending |
+| C-8.10 | Roles shown in the viewer list | §8.2, R2.7 | — | ✅ | ✅ | ⏸ | ⏸ | Win: role names as text with a colour dot. Web: role chips with a colour dot (browser test) |
 
 #### C-8.1 Permission catalogue
 Acceptance criteria: exactly the 19 keys of §8.1, spelt identically in the theatre (`rbac.ts`), every client and the
@@ -954,11 +954,11 @@ readable (a dot or bar, not coloured text on its own; see C-23.3.1).
 
 | ID | Task | § | Th | Win | Web | And | Lin | Tests / notes |
 |---|---|---|---|---|---|---|---|---|
-| C-9.1 | Chat mute and unmute | §9, R6.3 | ✅ | ✅ | ⬜ | ⏸ | ⏸ | Th smoke (muted can't chat) |
-| C-9.2 | Kick | §9, R6.1 | ✅ | ✅ | ⬜ | ⏸ | ⏸ | Th smoke; Win live |
-| C-9.3 | Ban | §9, R6.2 | ✅ | ✅ | ⬜ | ⏸ | ⏸ | Th smoke |
-| C-9.4 | Viewer actions menu, filtered by rank and permission | §8.2, §8.5 | — | ✅ | ⬜ | ⏸ | ⏸ | Win UI: manual |
-| C-9.5 | Being kicked or banned | §9 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Th smoke; clients UI: manual |
+| C-9.1 | Chat mute and unmute | §9, R6.3 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th smoke (muted can't chat). Web: menu action; the muted viewer's input says why; icon for everyone (browser test); by-hand check pending |
+| C-9.2 | Kick | §9, R6.1 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th smoke; Win live. Web: back to the lobby with "You were removed from the screen.", can rejoin (browser test); by-hand check pending |
+| C-9.3 | Ban | §9, R6.2 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th smoke. Web: asks "Ban X from this screen? They can't come back."; removed, and rejoining is refused (browser test); by-hand check pending |
+| C-9.4 | Viewer actions menu, filtered by rank and permission | §8.2, §8.5 | — | ✅ | 🟨 | ⏸ | ⏸ | Win UI: manual. Web: ⋯ menu per viewer with only the allowed actions, "No actions available" otherwise, never for yourself (unit, browser test); by-hand check pending |
+| C-9.5 | Being kicked or banned | §9 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Th smoke; Win UI: manual. Web: the theatre's own reason (browser test) |
 
 #### C-9.1 Chat mute
 Acceptance criteria: needs `viewers.mute` and a target ranked below you; the muted viewer can't send chat, GIFs or
@@ -994,10 +994,10 @@ Acceptance criteria: the client stops reconnecting and returns to the lobby with
 |---|---|---|---|---|---|---|---|---|
 | C-10.1 | Viewer rows: name, you, host, acting host, co-host #n | §12, R2.7 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Win unit (parse); UI: manual |
 | C-10.2 | Device reported in `hello` | §12, R9.1 | ✅ | ✅ | ✅ | ⏸ | ⏸ | `windows`, `web` (`linux`, `android` later) |
-| C-10.3 | Device icon per viewer | §12, R9.2 | — | 🟨 | 🟨 | ⏸ | ⏸ | Both show the device as text, not an icon |
+| C-10.3 | Device icon per viewer | §12, R9.2 | — | 🟨 | 🟨 | ⏸ | ⏸ | Win: shows the device as text, not an icon. Web: Windows, Linux, Android and web icons with the name as tooltip and accessible name; by-hand check pending |
 | C-10.4 | Show devices off: no devices sent or shown | §12, R9.3 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Th smoke |
-| C-10.5 | Own latency, updated live | §12, R9.4 | — | ✅ | ⬜ | ⏸ | ⏸ | Win: in the sync overlay. Web: the sync readout has no RTT |
-| C-10.6 | Others' latency with colour bands | §12, R9.5 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Web: the number only, no bands |
+| C-10.5 | Own latency, updated live | §12, R9.4 | — | ✅ | 🟨 | ⏸ | ⏸ | Win: in the sync overlay. Web: "Your ping" in the Viewers tab and in the player bar, with bands, after every clock sync; by-hand check pending |
+| C-10.6 | Others' latency with colour bands | §12, R9.5 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Web: "45 ms" with a green, yellow or red dot (unit), "–" when unknown; by-hand check pending |
 | C-10.7 | RTT reported after every clock sync | §12, §14.3 | ✅ | ✅ | ✅ | ⏸ | ⏸ | |
 | C-10.8 | Sync status per viewer (six states) | §12, R9.6 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Th smoke; Win emoji, Web coloured words |
 | C-10.9 | Status reporter: on change only, buffering after 2 s | §12, §14.10 | — | ✅ | ✅ | ⏸ | ⏸ | Win unit; Web unit |
@@ -1646,7 +1646,7 @@ videos" (§17.1).
 | C-18.4 | GIF search (GIPHY, key kept on the device) | §18, R16.4, R16.5 | — | ✅ | ✅ | ⏸ | ⏸ | Win unit. Web: unit (parse), browser test with `KINO_GIPHY_KEY` (not in CI); checked by hand |
 | C-18.5 | Pasted GIF links | §18, R16.4 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Th unit (allow list); Win unit. Web: unit and browser test; checked by hand |
 | C-18.6 | System messages | §18, R16.6 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Th smoke. Web: browser test; checked by hand |
-| C-18.7 | Chat permissions and muted state | §18, R16.7 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th smoke. Web: permissions and "Slow down a little" work (browser test, checked by hand); the muted state can't be exercised from the web UI until moderation lands (WEB-9.1) |
+| C-18.7 | Chat permissions and muted state | §18, R16.7 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th smoke. Web: permissions, mute ("You are muted in this screen.") and "Slow down a little" (browser test); mute by-hand check pending |
 
 #### C-18.1 Text chat
 Acceptance criteria: a Chat tab; messages up to 500 characters (newlines kept, control characters dropped; the client
