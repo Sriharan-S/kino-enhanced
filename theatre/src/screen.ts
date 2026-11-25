@@ -2,7 +2,7 @@
 // WebSockets use the Hibernation API: idle screens sleep without dropping connections.
 import { DurableObject } from "cloudflare:workers";
 import * as A from "./anchor";
-import { hashPassword, sha256Hex, verifyPassword } from "./crypto";
+import { hashPassword, screenCode, sha256Hex, verifyPassword } from "./crypto";
 import type { Listing } from "./lobby";
 import {
   encode,
@@ -14,6 +14,7 @@ import {
   type Device,
   type ErrorCode,
   type Item,
+  type ScreenInfo,
   type ServerMessage,
   type ViewerInfo,
   type Visibility,
@@ -25,6 +26,8 @@ const EMPTY_SCREEN_TTL_MS = 5 * 60_000;
 /** Host and all co-hosts absent this long → the screen closes (§6.5). */
 const HOST_ABSENT_TTL_MS = 15 * 60_000;
 const DEFAULT_RTT_MS = 200;
+/** A dropped viewer keeps their place (and shows as reconnecting) this long (§6.4). */
+const RECONNECT_GRACE_MS = 60_000;
 /** Wrong-password limits (§11): per token, and per screen because tokens are chosen by the client. */
 const PASSWORD_WINDOW_MS = 60_000;
 const PASSWORD_ATTEMPTS_PER_TOKEN = 5;
@@ -67,6 +70,10 @@ interface ScreenState {
   createdAt: number;
   /** When the host and every co-host were last all absent, or null while one is present. */
   controllersAbsentSince: number | null;
+  /** When the last viewer left, or null while anyone is connected. */
+  emptySince: number | null;
+  /** Viewers whose connection dropped: token hash → when. They keep their seat for RECONNECT_GRACE_MS. */
+  away: Record<string, number>;
   /** Recent wrong passwords: token hash → timestamps (ms). */
   failedPasswords: Record<string, number[]>;
 }
@@ -117,11 +124,12 @@ export class ScreenDO extends DurableObject<Env> {
       anchor: A.initialAnchor(now),
       createdAt: now,
       controllersAbsentSince: null,
+      emptySince: now, // if the creator never connects, clean up like any empty screen
+      away: {},
       failedPasswords: {},
     };
     await this.save();
-    // If the creator never connects, clean up like any empty screen.
-    await this.ctx.storage.setAlarm(now + EMPTY_SCREEN_TTL_MS);
+    await this.scheduleAlarm();
   }
 
   override async fetch(request: Request): Promise<Response> {
@@ -175,13 +183,38 @@ export class ScreenDO extends DurableObject<Env> {
   override async alarm(): Promise<void> {
     const s = this.state;
     if (!s) return;
-    const online = this.online();
-    if (online.length === 0) return this.closeScreen("screen closed");
-    if (s.controllersAbsentSince !== null) {
-      const due = s.controllersAbsentSince + HOST_ABSENT_TTL_MS;
-      if (Date.now() >= due) return this.closeScreen("the host has left, so the screen closed");
-      await this.ctx.storage.setAlarm(due);
+    const now = Date.now();
+
+    // Reconnect grace over: drop them from the list.
+    let expired = false;
+    for (const [key, since] of Object.entries(s.away)) {
+      if (now - since >= RECONNECT_GRACE_MS) {
+        delete s.away[key];
+        expired = true;
+      }
     }
+    if (expired) this.broadcastViewers();
+
+    if (this.online().length === 0 && s.emptySince !== null && now >= s.emptySince + EMPTY_SCREEN_TTL_MS) {
+      return this.closeScreen("screen closed");
+    }
+    if (s.controllersAbsentSince !== null && now >= s.controllersAbsentSince + HOST_ABSENT_TTL_MS) {
+      return this.closeScreen("the host has left, so the screen closed");
+    }
+    await this.save();
+    await this.scheduleAlarm();
+  }
+
+  /** One alarm for every deadline: empty screen, host absence and reconnect grace. */
+  private async scheduleAlarm(): Promise<void> {
+    const s = this.state;
+    if (!s) return;
+    const deadlines: number[] = [];
+    if (s.emptySince !== null) deadlines.push(s.emptySince + EMPTY_SCREEN_TTL_MS);
+    if (s.controllersAbsentSince !== null) deadlines.push(s.controllersAbsentSince + HOST_ABSENT_TTL_MS);
+    for (const since of Object.values(s.away)) deadlines.push(since + RECONNECT_GRACE_MS);
+    if (deadlines.length) await this.ctx.storage.setAlarm(Math.min(...deadlines));
+    else await this.ctx.storage.deleteAlarm();
   }
 
   // ---- Join -----------------------------------------------------------------------------
@@ -222,7 +255,8 @@ export class ScreenDO extends DurableObject<Env> {
       }
       return false;
     });
-    if (!isOwner && others.length >= s.maxViewers) return this.reject(ws, "full", "screen is full", true);
+    const reserved = Object.keys(s.away).filter((k) => k !== key).length; // seats held for reconnecting viewers
+    if (!isOwner && others.length + reserved >= s.maxViewers) return this.reject(ws, "full", "screen is full", true);
 
     const me: Attachment = { key, id: key.slice(0, 12), name: h.name, device: h.device, rtt: null, buffering: false };
     ws.serializeAttachment(me);
@@ -230,13 +264,14 @@ export class ScreenDO extends DurableObject<Env> {
     member.name = h.name;
     member.device = h.device;
     delete s.failedPasswords[key];
+    delete s.away[key];
     await this.updatePresence();
 
     this.send(ws, {
       type: "welcome",
       data: {
         self: this.viewerInfo(me),
-        screen: { code: s.code, name: s.name, visibility: s.visibility, maxViewers: s.maxViewers, showDevices: s.showDevices },
+        screen: this.screenInfo(),
         viewers: this.viewerList(),
         roles: s.roles,
         coHosts: this.coHostList(),
@@ -469,6 +504,60 @@ export class ScreenDO extends DurableObject<Env> {
       case "screen.close":
         this.requireOwner(me);
         return this.closeScreen("the host closed the screen");
+
+      case "leave":
+        // Explicit leave: no reconnect grace.
+        ws.serializeAttachment(null);
+        try {
+          ws.close(1000, "left");
+        } catch {
+          /* ignore */
+        }
+        this.broadcastViewers();
+        await this.updatePresence();
+        await this.updateLobby();
+        return;
+
+      // ---- Screen settings & invites (§6.3, §11)
+
+      case "settings.update": {
+        this.require(me, "screen.settings");
+        const d = msg.data;
+        if (d.name !== undefined) s.name = d.name;
+        if (d.maxViewers !== undefined) s.maxViewers = d.maxViewers;
+        if (d.showDevices !== undefined) s.showDevices = d.showDevices;
+        if (d.visibility !== undefined || d.password !== undefined || d.hidden !== undefined) {
+          const visibility = d.visibility ?? s.visibility;
+          if (visibility === "private") {
+            if (d.password) s.passwordHash = await hashPassword(d.password);
+            if (!s.passwordHash) throw new ProtocolError("bad_request", "private screens need a password");
+            s.hidden = d.hidden ?? s.hidden;
+          } else {
+            s.passwordHash = null;
+            s.hidden = false;
+          }
+          s.visibility = visibility;
+        }
+        await this.save();
+        this.broadcast({ type: "screen", data: this.screenInfo() });
+        if (d.showDevices !== undefined) this.broadcastViewers();
+        await this.lobby().update(s.code, { name: s.name, visibility: s.visibility, hidden: s.hidden, maxViewers: s.maxViewers });
+        return;
+      }
+
+      case "code.regenerate": {
+        this.require(me, "screen.invite");
+        let next: string | null = null;
+        for (let attempt = 0; attempt < 8 && !next; attempt++) {
+          const candidate = screenCode();
+          if (await this.lobby().recode(s.code, candidate)) next = candidate;
+        }
+        if (!next) throw new ProtocolError("bad_request", "couldn't allocate a new code; try again");
+        s.code = next; // the old code stops working at once: it no longer resolves
+        await this.save();
+        this.broadcast({ type: "screen", data: this.screenInfo() });
+        return;
+      }
     }
   }
 
@@ -555,21 +644,12 @@ export class ScreenDO extends DurableObject<Env> {
     const controllerPresent = (s.ownerKey !== null && keys.has(s.ownerKey)) || s.coHosts.some((k) => keys.has(k));
     const now = Date.now();
 
-    if (online.length === 0) {
-      s.controllersAbsentSince ??= now;
-      await this.save();
-      await this.ctx.storage.setAlarm(now + EMPTY_SCREEN_TTL_MS);
-      return;
-    }
-    if (controllerPresent) {
-      s.controllersAbsentSince = null;
-      await this.save();
-      await this.ctx.storage.deleteAlarm();
-      return;
-    }
-    s.controllersAbsentSince ??= now;
+    if (online.length === 0) s.emptySince ??= now;
+    else s.emptySince = null;
+    if (controllerPresent) s.controllersAbsentSince = null;
+    else s.controllersAbsentSince ??= now;
     await this.save();
-    await this.ctx.storage.setAlarm(s.controllersAbsentSince + HOST_ABSENT_TTL_MS);
+    await this.scheduleAlarm();
   }
 
   private async closeScreen(reason: string): Promise<void> {
@@ -587,6 +667,7 @@ export class ScreenDO extends DurableObject<Env> {
 
   /** Disconnects a viewer (kick/ban). The close handler won't run for them, so update presence here. */
   private disconnect(key: string, code: ErrorCode, message: string): void {
+    delete this.state!.away[key];
     for (const [ws, a] of this.online()) {
       if (a.key !== key) continue;
       ws.serializeAttachment(null);
@@ -616,6 +697,7 @@ export class ScreenDO extends DurableObject<Env> {
     const me = ws.deserializeAttachment() as Attachment | null;
     if (!me) return;
     ws.serializeAttachment(null);
+    this.state.away[me.key] = Date.now(); // keeps their seat; shown as reconnecting
     this.broadcastViewers(ws);
     await this.updatePresence(ws);
     await this.updateLobby(ws);
@@ -650,12 +732,28 @@ export class ScreenDO extends DurableObject<Env> {
       allow: subject.member.allow,
       deny: subject.member.deny,
       permissions: R.effective(subject, s.roles),
+      connected: true,
     };
   }
 
+  /** Everyone connected, then anyone in their reconnect grace period. */
   private viewerList(except?: WebSocket): ViewerInfo[] {
+    const s = this.state!;
     const online = this.online(except);
-    return online.map(([, a]) => this.viewerInfo(a, online));
+    const here = new Set(online.map(([, a]) => a.key));
+    const list = online.map(([, a]) => this.viewerInfo(a, online));
+    for (const key of Object.keys(s.away)) {
+      const m = s.members[key];
+      if (here.has(key) || !m) continue;
+      const a: Attachment = { key, id: key.slice(0, 12), name: m.name, device: m.device as Device, rtt: null, buffering: false };
+      list.push({ ...this.viewerInfo(a, online), connected: false });
+    }
+    return list;
+  }
+
+  private screenInfo(): ScreenInfo {
+    const s = this.state!;
+    return { code: s.code, name: s.name, visibility: s.visibility, hidden: s.hidden, maxViewers: s.maxViewers, showDevices: s.showDevices };
   }
 
   private broadcastViewers(except?: WebSocket): void {
@@ -722,6 +820,8 @@ function normalise(s: ScreenState & { known?: Record<string, { name: string; dev
   s.roleSeq ??= 0;
   s.coHosts ??= [];
   s.controllersAbsentSince ??= null;
+  s.emptySince ??= null;
+  s.away ??= {};
   s.failedPasswords ??= {};
   return s;
 }

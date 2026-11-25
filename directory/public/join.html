@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Join a Kino screen</title>
+  <style>
+    :root { --bg: #f6f6f8; --card: #ffffff; --text: #1b1b1f; --muted: #5e5e6a; --accent: #3d6be8; --accent-text: #fff; --line: #e2e2e8; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #121216; --card: #1c1c22; --text: #ececf1; --muted: #a0a0ad; --accent: #6b8ff0; --accent-text: #0d0d12; --line: #2c2c35; }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 16px;
+           background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+    main { width: 100%; max-width: 420px; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 28px; }
+    h1 { font-size: 1.35rem; margin: 0 0 6px; }
+    p { margin: 8px 0; color: var(--muted); }
+    .code { font: 600 2.2rem/1.2 ui-monospace, Consolas, monospace; letter-spacing: .12em; color: var(--text); margin: 14px 0 4px; }
+    .theatre { font-size: .9rem; color: var(--muted); }
+    a.button { display: block; text-align: center; margin: 20px 0 8px; padding: 12px; border-radius: 8px; text-decoration: none;
+               background: var(--accent); color: var(--accent-text); font-weight: 600; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <main>
+    <div id="ok" class="hidden">
+      <h1>You're invited to a Kino screen</h1>
+      <div class="code" id="code"></div>
+      <div class="theatre">on theatre <span id="theatre"></span></div>
+      <a class="button" id="open" href="#">Open in Kino</a>
+      <p>Nothing happened? Open Kino, choose <strong>Join a screen</strong>, and enter the code above.</p>
+      <p>Kino syncs playback only: everyone plays their own copy of the video.</p>
+    </div>
+    <div id="bad" class="hidden">
+      <h1>This invite link isn't valid</h1>
+      <p>Ask for a new link, or open Kino and enter the screen code.</p>
+    </div>
+  </main>
+  <script>
+    // Link format: /join#<theatreId>/<CODE>. The fragment never reaches the server.
+    (function () {
+      var m = /^#([a-z][a-z0-9-]{1,30})\/([0-9A-Za-z]{6})\/?$/.exec(location.hash);
+      if (!m) { document.getElementById("bad").classList.remove("hidden"); return; }
+      var theatre = m[1];
+      var code = m[2].toUpperCase().replace(/[IL]/g, "1").replace(/O/g, "0");
+      if (!/^[0-9A-HJKMNP-TV-Z]{6}$/.test(code)) { document.getElementById("bad").classList.remove("hidden"); return; }
+      var app = "kino://join/" + theatre + "/" + code;
+      document.getElementById("code").textContent = code;
+      document.getElementById("theatre").textContent = theatre.charAt(0).toUpperCase() + theatre.slice(1);
+      document.getElementById("open").href = app;
+      document.getElementById("ok").classList.remove("hidden");
+      location.href = app; // the browser asks before opening the app
+    })();
+  </script>
+</body>
+</html>

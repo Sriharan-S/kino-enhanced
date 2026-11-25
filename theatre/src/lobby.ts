@@ -77,6 +77,14 @@ export class LobbyDO extends DurableObject<Env> {
     );
   }
 
+  /** Moves a screen to a new code (regenerate). Returns false if the new code is taken. */
+  recode(oldCode: string, newCode: string): boolean {
+    const taken = this.sql.exec("SELECT 1 FROM screens WHERE code = ?", newCode).toArray().length > 0;
+    if (taken) return false;
+    this.sql.exec("UPDATE screens SET code = ?, updated = ? WHERE code = ?", newCode, Date.now(), oldCode);
+    return true;
+  }
+
   remove(code: string): void {
     this.sql.exec("DELETE FROM screens WHERE code = ?", code);
   }

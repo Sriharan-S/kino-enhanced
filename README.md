@@ -81,11 +81,11 @@ Tasks are worked through in order and checked off as they are completed. Windows
 | 2.3   | Unique backend screen ID          | Internal ID, never shown anywhere in the UI                                             | ✅     |
 | 2.4   | Non-unique names                  | Screen names and viewer names do not have to be unique                                  | ✅     |
 | 2.5   | Join screen                       | From the lobby or by code; private screens prompt for the password                      | ✅     |
-| 2.6   | Leave screen                      | Leave button returns to the lobby; reconnect grace period pending                       | 🟨    |
+| 2.6   | Leave screen                      | Leave frees the seat at once; a dropped connection keeps it for 60 s and auto-reconnects | ✅     |
 | 2.7   | Viewer list                       | Side panel: Host / Acting host / Co-host #n / roles, device, ping, mute icon; away co-hosts listed | ✅     |
 | 2.8   | Host controls the screen          | The host has full control by default                                                    | ✅     |
 | 2.9   | Viewer cap                        | 2–25 (default 10), chosen when creating; enforced by the theatre                        | ✅     |
-| 2.10  | Screen settings                   | Name, visibility, password, devices toggle, buffering policy, auto-advance              | ⬜     |
+| 2.10  | Screen settings                   | Name, visibility, password, hide, max viewers, devices done; buffering policy, auto-advance pending | 🟨    |
 | 2.11  | Screen lifecycle                  | Empty screen closes after 5 min; host + co-hosts absent 15 min closes it; host can close it | ✅     |
 
 ### 3. Identity & Reconnect (no accounts)
@@ -150,21 +150,21 @@ Tasks are worked through in order and checked off as they are completed. Windows
 | #     | Task                              | Details                                                                                 | Status |
 | ----- | --------------------------------- | --------------------------------------------------------------------------------------- | ------ |
 | 8.1   | Screen code                       | 6-char code, separate from the hidden ID                                                | ✅     |
-| 8.2   | Invite link                       | `kino://join/<theatre>/<code>` plus a web link                                          | ⬜     |
+| 8.2   | Invite link                       | `kino://join/<theatre>/<code>` (per-user handler) and a web page at `/join#<theatre>/<code>` | ✅     |
 | 8.3   | Join by code                      | Code looked up on all theatres in parallel; down theatres skipped                       | ✅     |
 | 8.4   | Private join                      | Code plus password; wrong password rejected                                             | ✅     |
 | 8.5   | Password security                 | PBKDF2-SHA256; 5 wrong passwords per token and 30 per screen per minute                 | ✅     |
-| 8.6   | Regenerate code                   | Old code and link stop working                                                          | ⬜     |
+| 8.6   | Regenerate code                   | New code from Invite & settings; old code stops resolving at once                       | ✅     |
 
 ### 9. Device & Latency Visibility
 
 | #     | Task                              | Details                                                                                 | Status |
 | ----- | --------------------------------- | --------------------------------------------------------------------------------------- | ------ |
-| 9.1   | Device detection                  | Windows / Linux / Android / Web                                                         | ⬜     |
-| 9.2   | Show device per viewer            | Host included                                                                           | ⬜     |
-| 9.3   | Per-screen devices toggle         | Host setting, **on by default**                                                         | ⬜     |
-| 9.4   | Own latency indicator             | Live ping to the theatre                                                                | ⬜     |
-| 9.5   | Others' latency indicator         | Each viewer's RTT, refreshed on clock re-sync                                           | ⬜     |
+| 9.1   | Device detection                  | Sent in `hello`; Windows client reports `windows`                                       | ✅     |
+| 9.2   | Show device per viewer            | Viewers panel, host included                                                            | ✅     |
+| 9.3   | Per-screen devices toggle         | Screen setting, on by default; when off the theatre sends no devices                    | ✅     |
+| 9.4   | Own latency indicator             | Sync overlay shows your RTT to the theatre                                              | ✅     |
+| 9.5   | Others' latency indicator         | Viewers panel shows each RTT, updated after every clock re-sync                         | ✅     |
 | 9.6   | Sync status per viewer            | In sync / catching up / buffering / mismatch / waiting                                  | ⬜     |
 
 ### 10. Media Player

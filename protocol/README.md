@@ -76,6 +76,9 @@ Envelope: `{ "type": "<type>", "data": { ... } }`. Messages are limited to 16 Ki
 | `cohosts.set` | `{ viewers }` | host only | Co-hosts in priority order (first = takes over first). |
 | `host.transfer` | `{ viewer }` | host only | New host must be present. The old host becomes co-host #1. |
 | `screen.close` | `{}` | host only | Everyone gets `closed`; the screen is deleted. |
+| `settings.update` | `{ name?, visibility?, password?, hidden?, maxViewers?, showDevices? }` | `screen.settings` | Going private needs a password (new, or the existing one). Going public clears password and hidden. Viewers already in keep their place. |
+| `code.regenerate` | `{}` | `screen.invite` | New code; the old code and links stop working at once. Connected viewers aren't affected. |
+| `leave` | `{}` | joined | Explicit leave: no reconnect grace. |
 
 **Permissions** are checked by the theatre on every message (wiki docs §8). You can't grant permissions you don't have yourself,
 and you can only act on roles and viewers ranked strictly **below** you: host 1000, co-host and acting host 900, custom roles
@@ -91,6 +94,7 @@ and you can only act on roles and viewers ranked strictly **below** you: host 10
 | `item` | `Item \| null` | Current item changed |
 | `viewers` | `ViewerInfo[]` | Anyone joins or leaves, or their RTT, buffering, roles, co-host status or permissions change |
 | `roles` | `Role[]` | Roles were created, edited or deleted |
+| `screen` | `ScreenInfo` | Settings or code changed |
 | `cohosts` | `{ id, name }[]` | The co-host list changed. Priority order, **including co-hosts who aren't present** (viewer lists only show who is online). |
 | `error` | `{ code, message }` | Rejected message. Fatal errors are followed by a close with code `4001`. |
 
@@ -106,8 +110,10 @@ ViewerInfo = { id: string, name: string, device: Device|null, isHost: boolean, r
                muted: boolean,           // chat-muted
                allow: Permission[],      // per-viewer overrides: deny beats allow beats roles
                deny: Permission[],
-               permissions: Permission[] // effective, computed by the theatre
+               permissions: Permission[], // effective, computed by the theatre
+               connected: boolean         // false while in the 60 s reconnect grace period
              }
+ScreenInfo = { code: string, name: string, visibility: "public"|"private", hidden: boolean, maxViewers: number, showDevices: boolean }
 Role       = { id: string, name: string, colour: string|null, position: number, permissions: Permission[], builtin: boolean }
 Permission = "playback.toggle" | "playback.seek" | "playback.skip" | "playlist.add" | "playlist.add_external"
            | "playlist.remove" | "playlist.reorder" | "subtitles.share" | "screen.ready_check" | "screen.settings"
@@ -136,6 +142,10 @@ Clients ignore an anchor whose `seq` is lower than the last one they applied.
 ## 5. Typical flows
 
 **Create and host:** `POST /screens`, then open the WebSocket and send `hello{claim}`. The theatre replies `welcome` with `self.isHost = true`. The host then sends `load` and `play`.
+
+**Reconnect (§6.4):** a viewer whose connection drops (without `leave`) stays in the list with `connected: false` for
+60 s and keeps their seat. Reconnecting with the same token restores everything, and no password is needed. Kicked or
+banned viewers get no grace.
 
 **Host away (§7.2):** when the host disconnects, the highest-priority co-host who is present becomes acting host
 (`actingHost: true`) and the timeline authority (it re-anchors). When the host reconnects with the same token, it takes back

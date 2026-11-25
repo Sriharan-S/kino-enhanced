@@ -61,6 +61,17 @@ export interface ViewerInfo {
   deny: Permission[];
   /** Effective permissions, computed by the theatre. */
   permissions: Permission[];
+  /** False while the viewer's connection has dropped and they have a reconnect grace period (§6.4). */
+  connected: boolean;
+}
+
+export interface ScreenInfo {
+  code: string;
+  name: string;
+  visibility: Visibility;
+  hidden: boolean;
+  maxViewers: number;
+  showDevices: boolean;
 }
 
 /** A co-host in priority order, present or not (viewer lists only include who is online). */
@@ -91,7 +102,13 @@ export type ClientMessage =
   | { type: "viewer.ban"; data: { viewer: string } }
   | { type: "cohosts.set"; data: { viewers: string[] } }
   | { type: "host.transfer"; data: { viewer: string } }
-  | { type: "screen.close"; data: Record<string, never> };
+  | { type: "screen.close"; data: Record<string, never> }
+  | { type: "leave"; data: Record<string, never> }
+  | {
+      type: "settings.update";
+      data: { name?: string; visibility?: Visibility; password?: string; hidden?: boolean; maxViewers?: number; showDevices?: boolean };
+    }
+  | { type: "code.regenerate"; data: Record<string, never> };
 
 // ---- Theatre -> client --------------------------------------------------------------
 
@@ -112,7 +129,7 @@ export type ServerMessage =
       type: "welcome";
       data: {
         self: ViewerInfo;
-        screen: { code: string; name: string; visibility: Visibility; maxViewers: number; showDevices: boolean };
+        screen: ScreenInfo;
         viewers: ViewerInfo[];
         roles: Role[];
         coHosts: CoHostInfo[];
@@ -127,6 +144,7 @@ export type ServerMessage =
   | { type: "viewers"; data: ViewerInfo[] }
   | { type: "roles"; data: Role[] }
   | { type: "cohosts"; data: CoHostInfo[] }
+  | { type: "screen"; data: ScreenInfo }
   | { type: "error"; data: { code: ErrorCode; message: string } };
 
 // ---- Validation ----------------------------------------------------------------------
@@ -288,7 +306,22 @@ export function parseClientMessage(raw: string | ArrayBuffer): ClientMessage {
       return { type: "cohosts.set", data: { viewers: [...new Set(d.viewers.map((v) => viewerId(v)))] } };
     }
     case "screen.close":
-      return { type: "screen.close", data: {} };
+    case "leave":
+    case "code.regenerate":
+      return { type: msg.type, data: {} };
+    case "settings.update": {
+      const out: Extract<ClientMessage, { type: "settings.update" }>["data"] = {};
+      if (d.name !== undefined) out.name = cleanName(d.name, "name", LIMITS.screenName);
+      if (d.visibility !== undefined) {
+        if (d.visibility !== "public" && d.visibility !== "private") throw new ProtocolError("bad_request", "visibility must be public or private");
+        out.visibility = d.visibility;
+      }
+      if (d.password !== undefined) out.password = str(d.password, "password", LIMITS.password);
+      if (d.hidden !== undefined) out.hidden = bool(d.hidden, "hidden");
+      if (d.maxViewers !== undefined) out.maxViewers = Math.round(num(d.maxViewers, "maxViewers", 2, LIMITS.maxViewersCap));
+      if (d.showDevices !== undefined) out.showDevices = bool(d.showDevices, "showDevices");
+      return { type: "settings.update", data: out };
+    }
     default:
       throw new ProtocolError("bad_request", `unknown type ${msg.type}`);
   }

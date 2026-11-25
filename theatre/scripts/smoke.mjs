@@ -1,9 +1,9 @@
 // End-to-end smoke test against a running theatre (default: local `npm run dev`).
-// Usage: node scripts/smoke.mjs [baseUrl]
+// Usage: node scripts/smoke.mjs [baseUrl] [--slow]    (--slow adds a ~65 s reconnect-grace expiry check)
 import { createHmac, randomBytes } from "node:crypto";
 import assert from "node:assert/strict";
 
-const BASE = process.argv[2] ?? "http://127.0.0.1:8787";
+const BASE = process.argv.slice(2).find((a) => !a.startsWith("--")) ?? "http://127.0.0.1:8787";
 const WS_BASE = BASE.replace(/^http/, "ws");
 
 const token = (secret, screenId) => createHmac("sha256", secret).update(screenId).digest("hex");
@@ -210,7 +210,7 @@ host.send("cohosts.set", { viewers: [carolId] });
 await carol.next("viewers", (l) => me(l, carolId)?.coHost === 1);
 host.close();
 const acting = await carol.next("viewers", (l) => me(l, carolId)?.actingHost === true);
-assert.ok(!acting.some((v) => v.isHost), "host gone");
+assert.ok(acting.some((v) => v.isHost && v.connected === false), "host shown as reconnecting");
 carol.send("seek", { to: 42 });
 await viewer.next("anchor", (a) => a.position === 42);
 const [host2, hw2] = await join(code, screenId, hostSecret, "Host");
@@ -238,14 +238,65 @@ banned.send("hello", { protocol: 1, token: token(viewerSecret, screenId), name: 
 assert.equal((await banned.next("error")).code, "banned");
 step("kicked viewer can rejoin with roles intact; banned viewer can't");
 
+// --- reconnect grace (§6.4) and explicit leave
+const daveSecret = randomBytes(32);
+const [dave, daveWelcome] = await join(code, screenId, daveSecret, "Dave");
+const daveId = daveWelcome.self.id;
+dave.close(); // connection drops (no leave)
+await host2.next("viewers", (l) => me(l, daveId)?.connected === false);
+const [dave2] = await join(code, screenId, daveSecret, "Dave");
+await host2.next("viewers", (l) => me(l, daveId)?.connected === true);
+dave2.send("leave");
+await host2.next("viewers", (l) => !me(l, daveId));
+step("dropped viewer shows as reconnecting and gets their seat back; leave removes them at once");
+
+// --- screen settings (§6.3) and code regeneration (§11)
+viewer2.close();
+const [eve, eveWelcome] = await join(code, screenId, randomBytes(32), "Eve");
+eve.send("settings.update", { name: "Hacked" });
+assert.equal((await eve.next("error")).code, "forbidden");
+host2.send("settings.update", { visibility: "private" });
+assert.match((await host2.next("error")).message, /password/);
+host2.send("settings.update", { name: "Renamed", visibility: "private", password: "letmein", maxViewers: 8, showDevices: false });
+const renamed = await eve.next("screen", (sc) => sc.name === "Renamed");
+assert.equal(renamed.visibility, "private");
+assert.equal(renamed.maxViewers, 8);
+await eve.next("viewers", (l) => l.every((v) => v.device === null));
+assert.equal((await http("GET", `/resolve/${code}`)).body.requiresPassword, true);
+host2.send("settings.update", { visibility: "public" });
+await eve.next("screen", (sc) => sc.visibility === "public");
+step("settings: viewers can't change them; host renames, goes private (password required), hides devices, goes public");
+
+host2.send("code.regenerate");
+const recoded = await eve.next("screen", (sc) => sc.code !== code);
+assert.equal((await http("GET", `/resolve/${code}`)).status, 404, "old code stops working");
+assert.equal((await http("GET", `/resolve/${recoded.code}`)).body.screenId, screenId);
+step(`code regenerated ${code} → ${recoded.code}; old code no longer resolves`);
+void eveWelcome;
+
 // --- transfer ownership (§7.5) and close
 host2.send("host.transfer", { viewer: carolId });
 const transferred = await carol.next("viewers", (l) => me(l, carolId)?.isHost === true);
 assert.equal(me(transferred, hw2.self.id).coHost, 1, "old host becomes top co-host");
 carol.send("screen.close");
 assert.equal((await host2.next("error")).code, "closed");
-assert.equal((await http("GET", `/resolve/${code}`)).status, 404);
+assert.equal((await http("GET", `/resolve/${recoded.code}`)).status, 404, "closed screen no longer resolves");
 step("transfer makes Carol host (old host → co-host #1); she closes the screen");
 
-for (const c of [host, viewer, viewer2, banned, carol, host2]) c.close();
+for (const c of [host, viewer, viewer2, banned, carol, host2, dave, dave2, eve]) c.close();
+
+// --- (optional, ~65 s) reconnect grace expires on the alarm
+if (process.argv.includes("--slow")) {
+  const g = await http("POST", "/screens", { name: "Grace test", visibility: "public" });
+  const [gh] = await join(g.body.code, g.body.screenId, randomBytes(32), "Host", { claim: g.body.claim });
+  const [gv, gvw] = await join(g.body.code, g.body.screenId, randomBytes(32), "Leaver");
+  await gh.next("viewers", (l) => l.length === 2);
+  gv.close();
+  await gh.next("viewers", (l) => me(l, gvw.self.id)?.connected === false);
+  await gh.next("viewers", (l) => !me(l, gvw.self.id), 75_000);
+  gh.send("screen.close");
+  gh.close();
+  step("reconnect grace expires after 60 s and the viewer is removed");
+}
+
 console.log("\nAll smoke checks passed.");
