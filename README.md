@@ -80,11 +80,11 @@ Tasks are worked through in order and checked off as they are completed. Windows
 | 2.2   | Create screen                     | Host must enter a screen name before it is created                                      | ✅     |
 | 2.3   | Unique backend screen ID          | Internal ID, never shown anywhere in the UI                                             | ✅     |
 | 2.4   | Non-unique names                  | Screen names and viewer names do not have to be unique                                  | ✅     |
-| 2.5   | Join screen                       | Join works (code + per-screen token); lobby UI pending                                  | 🟨    |
-| 2.6   | Leave screen                      | Clean leave; reconnect grace period                                                     | ⬜     |
+| 2.5   | Join screen                       | From the lobby or by code; private screens prompt for the password                      | ✅     |
+| 2.6   | Leave screen                      | Leave button returns to the lobby; reconnect grace period pending                       | 🟨    |
 | 2.7   | Viewer list                       | Host, co-hosts and viewers, with status icons                                           | ⬜     |
 | 2.8   | Host controls the screen          | The host has full control by default                                                    | ⬜     |
-| 2.9   | Viewer cap                        | Default maximum of 10, configurable by the host                                         | ⬜     |
+| 2.9   | Viewer cap                        | 2–25 (default 10), chosen when creating; enforced by the theatre                        | ✅     |
 | 2.10  | Screen settings                   | Name, visibility, password, devices toggle, buffering policy, auto-advance              | ⬜     |
 | 2.11  | Screen lifecycle                  | Empty-screen cleanup via DO alarm done; host-absence timeout pending                    | 🟨    |
 
@@ -134,16 +134,16 @@ Tasks are worked through in order and checked off as they are completed. Windows
 
 | #     | Task                              | Details                                                                                 | Status |
 | ----- | --------------------------------- | --------------------------------------------------------------------------------------- | ------ |
-| 7.1   | Unified lobby screen              | Screens from **all** theatres in one list, with no dropdown                             | ⬜     |
-| 7.2   | Parallel fetch across theatres    | `GET /lobby` per theatre done; client-side parallel merge pending                       | 🟨    |
-| 7.3   | Theatre badge per screen          | Each listed screen shows its theatre                                                    | ⬜     |
-| 7.4   | Theatre latency indicator         | Ping per theatre shown in the theatre picker; lobby pending                             | 🟨    |
-| 7.5   | Public screens                    | Always listed; anyone can join                                                          | ⬜     |
-| 7.6   | Private screens                   | Password-protected                                                                      | ⬜     |
-| 7.7   | "Hide from lobby" toggle          | Only for private screens                                                                | ⬜     |
-| 7.8   | Refresh                           | Manual refresh plus 15 s auto-refresh                                                   | ⬜     |
-| 7.9   | Partial results                   | 4 s per-theatre timeout for ping and code lookup; lobby pending                         | 🟨    |
-| 7.10  | Sort & filter                     | By viewers, latency, name, privacy, theatre                                             | ⬜     |
+| 7.1   | Unified lobby screen              | Screens from every theatre in one list (Windows)                                        | ✅     |
+| 7.2   | Parallel fetch across theatres    | `GET /lobby` on all theatres in parallel, merged client-side                            | ✅     |
+| 7.3   | Theatre badge per screen          | Each listed screen shows its theatre                                                    | ✅     |
+| 7.4   | Theatre latency indicator         | Ping badge per theatre and per screen; theatre picker shows ping                        | ✅     |
+| 7.5   | Public screens                    | Always listed; anyone can join                                                          | ✅     |
+| 7.6   | Private screens                   | Lock icon; password prompt on join                                                      | ✅     |
+| 7.7   | "Hide from lobby" toggle          | Toggle appears only when Private is on                                                  | ✅     |
+| 7.8   | Refresh                           | Manual refresh plus 15 s auto-refresh                                                   | ✅     |
+| 7.9   | Partial results                   | 3 s per-theatre timeout; failed theatres get an unavailable badge                       | ✅     |
+| 7.10  | Sort & filter                     | Sort by viewers, ping, name; filter by visibility, theatre; search                      | ✅     |
 
 ### 8. Invites
 
