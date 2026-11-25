@@ -129,20 +129,20 @@ Counts every row in the phase tables (sub-tasks included); "—" rows are left o
 | 8 | ✅ 12 | ✅ 11 · 🟨 2 | ✅ 3 · 🟨 1 · ⬜ 9 | ⏸ 13 | ⏸ 13 |
 | 9 | ✅ 4 | ✅ 5 | ✅ 1 · ⬜ 4 | ⏸ 5 | ⏸ 5 |
 | 10 | ✅ 6 | ✅ 10 · 🟨 1 | ✅ 8 · 🟨 2 · ⬜ 1 | ⏸ 11 | ⏸ 11 |
-| 11 | ✅ 14 · ⬜ 1 | ✅ 25 · 🟨 1 · ⬜ 2 | ✅ 19 · 🟨 3 · ⬜ 6 | ⏸ 28 | ⏸ 28 |
-| 12 | — | ✅ 4 · 🟨 4 · ⬜ 2 | ✅ 5 · 🟨 2 · ⬜ 4 | ⏸ 11 | ⏸ 10 |
+| 11 | ✅ 14 · ⬜ 1 | ✅ 25 · 🟨 1 · ⬜ 2 | ✅ 20 · 🟨 2 · ⬜ 6 | ⏸ 28 | ⏸ 28 |
+| 12 | — | ✅ 4 · 🟨 4 · ⬜ 2 | ✅ 6 · 🟨 1 · ⬜ 4 | ⏸ 11 | ⏸ 10 |
 | 13 | ✅ 7 | ✅ 19 · 🟨 2 · ⬜ 1 | ✅ 15 · 🟨 4 · ⬜ 3 | ⏸ 22 | ⏸ 22 |
 | 14 | ✅ 4 · ⬜ 1 | ✅ 8 · ⬜ 1 | ✅ 2 · 🟨 2 · ⬜ 5 | ⏸ 9 | ⏸ 9 |
 | 15 | — | ✅ 1 · 🟨 1 | 🟨 1 · ⬜ 3 | ⏸ 2 | ⏸ 2 |
 | 16 | ✅ 1 | ✅ 7 | ✅ 2 · ⬜ 5 | ⏸ 7 | ⏸ 7 |
 | 17 | ✅ 6 | ✅ 8 · 🟨 3 · ⬜ 1 | 🟨 2 · ⬜ 9 | ⏸ 12 | ⏸ 12 |
-| 18 | ✅ 7 | ✅ 9 | 🟨 3 · ⬜ 6 | ⏸ 9 | ⏸ 9 |
+| 18 | ✅ 7 | ✅ 9 | 🟨 9 | ⏸ 9 | ⏸ 9 |
 | 19 | ✅ 1 | ✅ 2 · 🟨 5 | ✅ 7 | ⏸ 7 | ⏸ 7 |
 | 20 | ✅ 3 | ✅ 4 · 🟨 2 | ✅ 2 · 🟨 1 · ⬜ 2 | ⏸ 6 | ⏸ 6 |
 | 21 | ✅ 1 · ⬜ 13 | ✅ 1 · 🟨 1 · ⬜ 14 | ✅ 3 · 🟨 1 · ⬜ 13 | ⏸ 14 | ⏸ 14 |
 | 22 | ⏸ 4 | ⏸ 3 | ⏸ 3 | ⏸ 3 | ⏸ 3 |
 | 23 | ⬜ 23 | ⬜ 26 | ⬜ 28 | ⬜ 27 | ⬜ 26 |
-| **All** | **✅ 137 · 🟨 4 · ⬜ 45 · ⏸ 4** | **✅ 169 · 🟨 34 · ⬜ 49 · ⏸ 3** | **✅ 108 · 🟨 34 · ⬜ 114 · ⏸ 3** | **⬜ 27 · ⏸ 228** | **⬜ 26 · ⏸ 227** |
+| **All** | **✅ 137 · 🟨 4 · ⬜ 45 · ⏸ 4** | **✅ 169 · 🟨 34 · ⬜ 49 · ⏸ 3** | **✅ 110 · 🟨 38 · ⬜ 108 · ⏸ 3** | **⬜ 27 · ⏸ 228** | **⬜ 26 · ⏸ 227** |
 
 ---
 
@@ -1083,7 +1083,7 @@ same tests.
 | C-11.20 | Personal sync offset | §14.15, R11.15 | — | ✅ | 🟨 | ⏸ | ⏸ | Win unit. Web: the engine supports it (unit test), no control |
 | C-11.21 | Sync readout for the viewer | §14 | — | ✅ | ✅ | ⏸ | ⏸ | Zone, drift, rate. UI: manual |
 | C-11.22 | Shared sync test vectors across engines | §14 | ⬜ | ⬜ | ⬜ | ⏸ | ⏸ | Today the tests are ported by hand |
-| C-11.23 | Sleep, lock and background behaviour | §14.11 | — | 🟨 | 🟨 | ⏸ | ⏸ | Win: recovers through reconnect; not tested. Web: the engine ticks from a dedicated worker (not throttled in background tabs) and a tick gap over 3 s runs a full clock burst; AC 2 (30 min hidden) not yet verified by hand, AC 3 not automated |
+| C-11.23 | Sleep, lock and background behaviour | §14.11 | — | 🟨 | ✅ | ⏸ | ⏸ | Win: recovers through reconnect; not tested. Web: the engine ticks from a dedicated worker (not throttled in background tabs); a tick gap over 3 s runs a full clock burst (live test); 30 minutes hidden checked by hand |
 
 #### C-11.1 Sync only
 Acceptance criteria: only playback state, times and small metadata (names, durations, links, chat, subtitle files the
@@ -1227,7 +1227,7 @@ Acceptance criteria:
 | C-12.7 | Keyboard shortcuts | §15.4, R10.6 | — | 🟨 | 🟨 | ⏸ | ⏸ | Win: a focused slider takes the arrow keys, nothing works while the YouTube view has focus, and seeking reads libmpv's position during YouTube items. Web: no ↑/↓, N, P or Home |
 | C-12.8 | Touch gestures | §15.4 | — | — | ⬜ | ⏸ | — | Web: phones and tablets |
 | C-12.9 | Buffering and end-of-file detection | §15.2, §15.3 | — | 🟨 | ✅ | ⏸ | ⏸ | Win: only `paused-for-cache` (spec also lists `core-idle` and `seeking`) |
-| C-12.10 | System media controls go through the screen | — | — | ⬜ | 🟨 | ⏸ | ⏸ | Web: Media Session handlers route play, pause, next, previous and seeks through the screen with permissions; browser test checks the metadata; media keys not yet tried by hand |
+| C-12.10 | System media controls go through the screen | — | — | ⬜ | ✅ | ⏸ | ⏸ | Web: Media Session routes play, pause, next, previous and seeks through the screen with permissions; browser test checks the metadata; media keys checked by hand |
 | C-12.11 | Keep the display awake while playing | — | — | 🟨 | ⬜ | ⏸ | ⏸ | Win: relies on libmpv's default `stop-screensaver`; not verified |
 
 #### C-12.1 Playback engine integration
@@ -1638,15 +1638,15 @@ videos" (§17.1).
 
 | ID | Task | § | Th | Win | Web | And | Lin | Tests / notes |
 |---|---|---|---|---|---|---|---|---|
-| C-18.1 | Text chat with an unread count | §18, R16.1 | ✅ | ✅ | ⬜ | ⏸ | ⏸ | Th smoke; Win unit (parse) |
-| C-18.2 | Chat history for late joiners | §18, R16.2 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th smoke. Web: kept in the session, never shown |
-| C-18.3 | Emoji reactions | §18, R16.3 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th smoke |
-| C-18.3.1 | Send a reaction | §18 | ✅ | ✅ | ⬜ | ⏸ | ⏸ | |
-| C-18.3.2 | Reactions float over the video for 3 s | §18 | — | ✅ | 🟨 | ⏸ | ⏸ | Web: shown as toasts |
-| C-18.4 | GIF search (GIPHY, key kept on the device) | §18, R16.4, R16.5 | — | ✅ | ⬜ | ⏸ | ⏸ | Win unit |
-| C-18.5 | Pasted GIF links | §18, R16.4 | ✅ | ✅ | ⬜ | ⏸ | ⏸ | Th unit (allow list); Win unit |
-| C-18.6 | System messages | §18, R16.6 | ✅ | ✅ | ⬜ | ⏸ | ⏸ | Th smoke |
-| C-18.7 | Chat permissions and muted state | §18, R16.7 | ✅ | ✅ | ⬜ | ⏸ | ⏸ | Th smoke |
+| C-18.1 | Text chat with an unread count | §18, R16.1 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th smoke; Win unit (parse). Web: Chat tab, 500-character input, Enter to send, unread badge; browser test (`scripts/e2e.mjs`); by-hand check pending |
+| C-18.2 | Chat history for late joiners | §18, R16.2 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th smoke. Web: `welcome.chat` shown on join, de-duplicated by id; browser test (`scripts/e2e.mjs`); by-hand check pending |
+| C-18.3 | Emoji reactions | §18, R16.3 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th smoke. Web: see sub-tasks; by-hand check pending |
+| C-18.3.1 | Send a reaction | §18 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Web: reaction bar with the 8 reactions, follows `chat.react` and mute; browser test (`scripts/e2e.mjs`); by-hand check pending |
+| C-18.3.2 | Reactions float over the video for 3 s | §18 | — | ✅ | 🟨 | ⏸ | ⏸ | Web: float for 3 s with the sender's name, at most 6 at once, not stored; reduced-motion fades instead; browser test (`scripts/e2e.mjs`); by-hand check pending |
+| C-18.4 | GIF search (GIPHY, key kept on the device) | §18, R16.4, R16.5 | — | ✅ | 🟨 | ⏸ | ⏸ | Win unit. Web: GIPHY from the browser (trending when empty, 24 results, pg-13), key in local storage only; unit (parse) and browser test (`scripts/e2e.mjs`) when `KINO_GIPHY_KEY` is set (not in CI); by-hand check pending |
+| C-18.5 | Pasted GIF links | §18, R16.4 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th unit (allow list); Win unit. Web: unit (same allow list) and browser test (`scripts/e2e.mjs`); by-hand check pending |
+| C-18.6 | System messages | §18, R16.6 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th smoke. Web: shown in chat, styled apart; browser test (`scripts/e2e.mjs`); by-hand check pending |
+| C-18.7 | Chat permissions and muted state | §18, R16.7 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th smoke. Web: input, GIF button and reaction bar follow `chat.send`, `chat.gif`, `chat.react` and mute, with the reason; "Slow down a little" shown in the chat panel (browser test (`scripts/e2e.mjs`)). The muted state can't be exercised from the web UI until moderation lands (WEB-9.1) |
 
 #### C-18.1 Text chat
 Acceptance criteria: a Chat tab; messages up to 500 characters (newlines kept, control characters dropped; the client
