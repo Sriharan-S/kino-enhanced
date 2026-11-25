@@ -84,6 +84,9 @@ Envelope: `{ "type": "<type>", "data": { ... } }`. Messages are limited to 16 Ki
 | `settings.update` | `{ name?, visibility?, password?, hidden?, maxViewers?, showDevices?, autoAdvance? }` | `screen.settings` | Going private needs a password (new, or the existing one). Going public clears password and hidden. Viewers already in keep their place. |
 | `code.regenerate` | `{}` | `screen.invite` | New code; the old code and links stop working at once. Connected viewers aren't affected. |
 | `leave` | `{}` | joined | Explicit leave: no reconnect grace. |
+| `chat.send` | `{ text }` | `chat.send`, not muted | 1–500 characters (newlines kept, control characters dropped). 5 messages per 5 s, shared with GIFs. |
+| `chat.gif` | `{ url, width?, height?, title? }` | `chat.gif`, not muted | `https` URL from an allow-listed GIF service (GIPHY, Tenor, KLIPY media hosts). The client searches the provider itself. |
+| `react` | `{ emoji }` | `chat.react`, not muted | One of 👍 ❤️ 😂 😮 😢 🔥 👏 🎉. Broadcast, never stored. 10 per 5 s. |
 
 **Permissions** are checked by the theatre on every message (wiki docs §8). You can't grant permissions you don't have yourself,
 and you can only act on roles and viewers ranked strictly **below** you: host 1000, co-host and acting host 900, custom roles
@@ -93,11 +96,13 @@ and you can only act on roles and viewers ranked strictly **below** you: host 10
 
 | Type | Data | When |
 |---|---|---|
-| `welcome` | `{ self, screen, viewers, roles, coHosts, playlist, item, anchor, serverTime }` | Reply to a successful `hello` |
+| `welcome` | `{ self, screen, viewers, roles, coHosts, playlist, chat, item, anchor, serverTime }` | Reply to a successful `hello` |
 | `pong` | `{ t0, ts }` | Reply to `ping`. `ts` is theatre time when it was handled. |
 | `anchor` | `Anchor` | Any timeline change |
 | `item` | `Item \| null` | Current item changed |
 | `playlist` | `Item[]` | Items added, removed or reordered |
+| `chat` | `ChatMessage` | A text, GIF or system message. The last 100 are kept and sent to late joiners in `welcome.chat`. |
+| `react` | `{ from, name, emoji }` | Someone reacted |
 | `viewers` | `ViewerInfo[]` | Anyone joins or leaves, or their RTT, buffering, roles, co-host status or permissions change |
 | `roles` | `Role[]` | Roles were created, edited or deleted |
 | `screen` | `ScreenInfo` | Settings or code changed |
@@ -122,6 +127,9 @@ ViewerInfo = { id: string, name: string, device: Device|null, isHost: boolean, r
 ScreenInfo = { code: string, name: string, visibility: "public"|"private", hidden: boolean, maxViewers: number, showDevices: boolean,
                autoAdvance: boolean }
 NewItem    = { kind: "local"|"url", name: string, duration: number|null, url?: string }   // local: file name only, never a path
+ChatMessage = { id: number, at: number, kind: "text"|"gif"|"system", from: string|null, name: string|null,
+                text: string|null, gif: { url, width, height, title }|null }
+// System messages: joins, leaves, kicks, bans, co-host and role changes, host transfer, acting host, now playing.
 Role       = { id: string, name: string, colour: string|null, position: number, permissions: Permission[], builtin: boolean }
 Permission = "playback.toggle" | "playback.seek" | "playback.skip" | "playlist.add" | "playlist.add_external"
            | "playlist.remove" | "playlist.reorder" | "subtitles.share" | "screen.ready_check" | "screen.settings"

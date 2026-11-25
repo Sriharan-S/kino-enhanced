@@ -128,7 +128,7 @@ Tasks are worked through in order and checked off as they are completed. Windows
 | ----- | --------------------------------- | --------------------------------------------------------------------------------------- | ------ |
 | 6.1   | Kick                              | Remove a viewer (they can rejoin)                                                       | ✅     |
 | 6.2   | Ban                               | Block the token for the screen's lifetime                                               | ✅     |
-| 6.3   | Chat mute                         | Mute flag stored and shown; enforced once chat exists                                   | 🟨    |
+| 6.3   | Chat mute                         | Muted viewers can't send chat, GIFs or reactions (enforced by the theatre)              | ✅     |
 
 ### 7. Lobby
 
@@ -259,13 +259,13 @@ Tasks are worked through in order and checked off as they are completed. Windows
 
 | #     | Task                             | Details                                                                                 | Status |
 | ----- | -------------------------------- | --------------------------------------------------------------------------------------- | ------ |
-| 16.1  | Text chat                        | Over the screen's WebSocket; 500 chars per message                                      | ⬜     |
-| 16.2  | Chat history                     | Last 100 messages, included in the join snapshot                                        | ⬜     |
-| 16.3  | Emoji reactions                  | Optionally floating over the video                                                      | ⬜     |
-| 16.4  | GIFs                             | Searched on the client; only allow-listed GIF URLs are sent                             | ⬜     |
-| 16.5  | GIF provider choice              | e.g. GIPHY / KLIPY                                                                      | ⬜     |
-| 16.6  | System messages                  | Joins, leaves, roles, handover, item changes                                            | ⬜     |
-| 16.7  | Chat permissions & rate limit    | RBAC; 5 messages per 5 s                                                                | ⬜     |
+| 16.1  | Text chat                        | Chat tab; 500 characters; unread count on the tab                                       | ✅     |
+| 16.2  | Chat history                     | Last 100 kept under their own storage key; sent in `welcome`                            | ✅     |
+| 16.3  | Emoji reactions                  | 8 fixed emoji; float over the video for 3 s; never stored                               | ✅     |
+| 16.4  | GIFs                             | Picker searches GIPHY directly; theatre accepts GIPHY/Tenor/KLIPY media URLs only; pasted GIF links work | ✅     |
+| 16.5  | GIF provider choice              | GIPHY (free API key, entered once in the picker; stored locally)                        | ✅     |
+| 16.6  | System messages                  | Joins, leaves, kicks, bans, co-host and role changes, host transfer, acting host, now playing | ✅     |
+| 16.7  | Chat permissions & rate limit    | `chat.send` / `chat.gif` / `chat.react`; 5 messages and 10 reactions per 5 s            | ✅     |
 
 ### 17. Platform Builds & Release
 

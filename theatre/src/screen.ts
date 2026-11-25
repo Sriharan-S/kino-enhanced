@@ -20,6 +20,7 @@ import {
   type ViewerInfo,
   type Visibility,
 } from "./protocol";
+import * as C from "./chat";
 import * as P from "./playlist";
 import * as R from "./rbac";
 
@@ -81,6 +82,8 @@ interface ScreenState {
   away: Record<string, number>;
   /** Recent wrong passwords: token hash → timestamps (ms). */
   failedPasswords: Record<string, number[]>;
+  /** Who was acting host at the last presence change, to announce handovers. */
+  actingHost: string | null;
 }
 
 /** Per-connection data, kept on the socket so it survives hibernation. */
@@ -91,16 +94,27 @@ interface Attachment {
   device: Device;
   rtt: number | null;
   buffering: boolean;
+  /** Recent chat / reaction times, for rate limiting. */
+  chatTimes?: number[];
+  reactTimes?: number[];
+}
+
+/** Chat lives under its own storage key, so messages don't rewrite the whole screen state. */
+interface ChatState {
+  seq: number;
+  messages: C.ChatMessage[];
 }
 
 export class ScreenDO extends DurableObject<Env> {
   private state: ScreenState | null = null;
+  private chat: ChatState = { seq: 0, messages: [] };
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
     ctx.blockConcurrencyWhile(async () => {
       const stored = await ctx.storage.get<ScreenState>("state");
       this.state = stored ? normalise(stored) : null;
+      this.chat = (await ctx.storage.get<ChatState>("chat")) ?? { seq: 0, messages: [] };
     });
   }
 
@@ -134,6 +148,7 @@ export class ScreenDO extends DurableObject<Env> {
       emptySince: now, // if the creator never connects, clean up like any empty screen
       away: {},
       failedPasswords: {},
+      actingHost: null,
     };
     await this.save();
     await this.scheduleAlarm();
@@ -198,6 +213,7 @@ export class ScreenDO extends DurableObject<Env> {
       if (now - since >= RECONNECT_GRACE_MS) {
         delete s.away[key];
         expired = true;
+        await this.system(`${this.nameOf(key)} left`);
       }
     }
     if (expired) this.broadcastViewers();
@@ -257,9 +273,13 @@ export class ScreenDO extends DurableObject<Env> {
       }
     }
 
+    // A reconnect (within the grace period) or a replaced connection isn't a new join.
+    let returning = key in s.away;
+
     // One live session per viewer: a new connection replaces the old one (e.g. after a network change).
     const others = this.online().filter(([w, a]) => {
       if (a.key !== key) return true;
+      returning = true;
       try {
         w.serializeAttachment(null);
         w.close(4000, "replaced by a newer connection");
@@ -278,6 +298,7 @@ export class ScreenDO extends DurableObject<Env> {
     member.device = h.device;
     delete s.failedPasswords[key];
     delete s.away[key];
+    if (!returning) await this.system(`${h.name} joined`);
     await this.updatePresence();
 
     this.send(ws, {
@@ -289,6 +310,7 @@ export class ScreenDO extends DurableObject<Env> {
         roles: s.roles,
         coHosts: this.coHostList(),
         playlist: s.playlist,
+        chat: this.chat.messages,
         item: s.item,
         anchor: s.anchor,
         serverTime: Date.now(),
@@ -335,6 +357,30 @@ export class ScreenDO extends DurableObject<Env> {
         me.buffering = msg.data.value;
         ws.serializeAttachment(me);
         this.broadcastViewers();
+        return;
+
+      // ---- Chat (§18)
+
+      case "chat.send":
+      case "chat.gif": {
+        this.require(me, msg.type === "chat.gif" ? "chat.gif" : "chat.send");
+        this.requireUnmuted(me);
+        this.rateLimit(ws, me, "chatTimes", C.CHAT_RATE, now);
+        await this.post({
+          kind: msg.type === "chat.gif" ? "gif" : "text",
+          from: me.id,
+          name: me.name,
+          text: msg.type === "chat.send" ? msg.data.text : null,
+          gif: msg.type === "chat.gif" ? msg.data : null,
+        });
+        return;
+      }
+
+      case "react":
+        this.require(me, "chat.react");
+        this.requireUnmuted(me);
+        this.rateLimit(ws, me, "reactTimes", C.REACT_RATE, now);
+        this.broadcast({ type: "react", data: { from: me.id, name: me.name, emoji: msg.data.emoji } });
         return;
 
       // ---- Playback
@@ -477,9 +523,11 @@ export class ScreenDO extends DurableObject<Env> {
         const targetKey = this.memberKey(msg.data.viewer);
         this.requireOutranks(actor, targetKey);
         const m = s.members[targetKey]!;
+        const had = m.roles.includes(role.id);
         m.roles = msg.data.assigned ? [...new Set([...m.roles, role.id])] : m.roles.filter((id) => id !== role.id);
         await this.save();
         this.broadcastViewers();
+        if (had !== msg.data.assigned) await this.system(msg.data.assigned ? `${m.name} is now ${role.name}` : `${m.name} is no longer ${role.name}`);
         return;
       }
 
@@ -514,6 +562,7 @@ export class ScreenDO extends DurableObject<Env> {
         const targetKey = this.memberKey(msg.data.viewer);
         this.requireOutranks(this.subject(me.key), targetKey);
         this.disconnect(targetKey, "kicked", "you were removed from the screen");
+        await this.system(`${this.nameOf(targetKey)} was removed by ${me.name}`);
         return;
       }
 
@@ -527,6 +576,7 @@ export class ScreenDO extends DurableObject<Env> {
         await this.save();
         this.disconnect(targetKey, "banned", "you are banned from this screen");
         if (wasCoHost) this.broadcast({ type: "cohosts", data: this.coHostList() });
+        await this.system(`${this.nameOf(targetKey)} was banned by ${me.name}`);
         return;
       }
 
@@ -536,7 +586,10 @@ export class ScreenDO extends DurableObject<Env> {
         this.requireOwner(me);
         const keys = msg.data.viewers.map((id) => this.memberKey(id));
         if (keys.includes(s.ownerKey!)) throw new ProtocolError("bad_request", "the host can't be a co-host");
+        const before = s.coHosts;
         s.coHosts = keys;
+        for (const k of keys.filter((k) => !before.includes(k))) await this.system(`${this.nameOf(k)} is now a co-host`);
+        for (const k of before.filter((k) => !keys.includes(k))) await this.system(`${this.nameOf(k)} is no longer a co-host`);
         await this.updatePresence();
         this.broadcastViewers();
         this.broadcast({ type: "cohosts", data: this.coHostList() });
@@ -552,6 +605,7 @@ export class ScreenDO extends DurableObject<Env> {
         // The old host becomes the top co-host (§7.5).
         s.coHosts = [me.key, ...s.coHosts.filter((k) => k !== targetKey && k !== me.key)];
         s.ownerKey = targetKey;
+        await this.system(`${this.nameOf(targetKey)} is now the host`);
         await this.updatePresence();
         this.broadcastViewers();
         this.broadcast({ type: "cohosts", data: this.coHostList() });
@@ -565,6 +619,7 @@ export class ScreenDO extends DurableObject<Env> {
 
       case "leave":
         // Explicit leave: no reconnect grace.
+        await this.system(`${me.name} left`);
         ws.serializeAttachment(null);
         try {
           ws.close(1000, "left");
@@ -666,6 +721,35 @@ export class ScreenDO extends DurableObject<Env> {
     return key;
   }
 
+  // ---- Chat helpers
+
+  private requireUnmuted(me: Attachment): void {
+    if (this.state!.members[me.key]?.muted) throw new ProtocolError("forbidden", "you are muted in this screen");
+  }
+
+  private rateLimit(ws: WebSocket, me: Attachment, field: "chatTimes" | "reactTimes", rate: { count: number; windowMs: number }, now: number): void {
+    const times = C.allow(me[field], now, rate);
+    if (!times) throw new ProtocolError("rate_limited", "slow down a little");
+    me[field] = times;
+    ws.serializeAttachment(me);
+  }
+
+  private async post(m: Omit<C.ChatMessage, "id" | "at">): Promise<void> {
+    const msg: C.ChatMessage = { id: ++this.chat.seq, at: Date.now(), ...m };
+    this.chat.messages = C.append(this.chat.messages, msg);
+    await this.ctx.storage.put("chat", this.chat);
+    this.broadcast({ type: "chat", data: msg });
+  }
+
+  /** Joins, leaves, roles, handover, item changes (§18). */
+  private system(text: string): Promise<void> {
+    return this.post({ kind: "system", from: null, name: null, text, gif: null });
+  }
+
+  private nameOf(key: string): string {
+    return this.state?.members[key]?.name ?? "Someone";
+  }
+
   private coHostList(): { id: string; name: string }[] {
     const s = this.state!;
     return s.coHosts.map((k) => ({ id: k.slice(0, 12), name: s.members[k]?.name ?? "?" }));
@@ -707,6 +791,13 @@ export class ScreenDO extends DurableObject<Env> {
     else s.emptySince = null;
     if (controllerPresent) s.controllersAbsentSince = null;
     else s.controllersAbsentSince ??= now;
+
+    const acting = this.actingHostKey(online);
+    if (acting !== s.actingHost) {
+      if (acting) await this.system(`${this.nameOf(acting)} is standing in for the host`);
+      else if (s.ownerKey && keys.has(s.ownerKey) && s.actingHost) await this.system("The host is back");
+      s.actingHost = acting;
+    }
     await this.save();
     await this.scheduleAlarm();
   }
@@ -757,6 +848,7 @@ export class ScreenDO extends DurableObject<Env> {
     s.anchor = a;
     await this.save();
     this.broadcast({ type: "item", data: item });
+    if (item) await this.system(`Now playing: ${item.name}`);
     this.broadcast({ type: "anchor", data: a });
     await this.scheduleAlarm();
   }
@@ -927,6 +1019,7 @@ function normalise(s: ScreenState & { known?: Record<string, { name: string; dev
   s.away ??= {};
   s.playlist ??= s.item ? [s.item] : [];
   s.autoAdvance ??= true;
+  s.actingHost ??= null;
   s.failedPasswords ??= {};
   return s;
 }

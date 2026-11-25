@@ -1,5 +1,7 @@
 // Kino protocol v1: wire types and validation for theatre <-> client messages.
 // The language-neutral spec lives in /protocol/README.md; examples in /protocol/examples.
+import type { ChatMessage, Gif, Reaction } from "./chat";
+import { cleanText, isAllowedGifUrl, isReaction } from "./chat";
 import { isPermission, type Permission, type Role } from "./rbac";
 
 export const PROTOCOL_VERSION = 1;
@@ -123,7 +125,10 @@ export type ClientMessage =
       type: "settings.update";
       data: { name?: string; visibility?: Visibility; password?: string; hidden?: boolean; maxViewers?: number; showDevices?: boolean; autoAdvance?: boolean };
     }
-  | { type: "code.regenerate"; data: Record<string, never> };
+  | { type: "code.regenerate"; data: Record<string, never> }
+  | { type: "chat.send"; data: { text: string } }
+  | { type: "chat.gif"; data: Gif }
+  | { type: "react"; data: { emoji: Reaction } };
 
 // ---- Theatre -> client --------------------------------------------------------------
 
@@ -149,6 +154,7 @@ export type ServerMessage =
         roles: Role[];
         coHosts: CoHostInfo[];
         playlist: Item[];
+        chat: ChatMessage[];
         item: Item | null;
         anchor: Anchor;
         serverTime: number;
@@ -162,6 +168,8 @@ export type ServerMessage =
   | { type: "cohosts"; data: CoHostInfo[] }
   | { type: "screen"; data: ScreenInfo }
   | { type: "playlist"; data: Item[] }
+  | { type: "chat"; data: ChatMessage }
+  | { type: "react"; data: { from: string; name: string; emoji: Reaction } }
   | { type: "error"; data: { code: ErrorCode; message: string } };
 
 // ---- Validation ----------------------------------------------------------------------
@@ -295,6 +303,25 @@ export function parseClientMessage(raw: string | ArrayBuffer): ClientMessage {
       return { type: msg.type, data: { id: itemId(d.id) } };
     case "playlist.move":
       return { type: "playlist.move", data: { id: itemId(d.id), to: num(d.to, "to", 0, 1000) } };
+    case "chat.send":
+      return { type: "chat.send", data: { text: cleanText(d.text) } };
+    case "chat.gif": {
+      const url = str(d.url, "url", LIMITS.url);
+      if (!isAllowedGifUrl(url)) throw new ProtocolError("bad_request", "GIFs must come from a supported GIF service");
+      const dim = (v: unknown, f: string) => (v === undefined || v === null ? null : Math.round(num(v, f, 1, 4096)));
+      return {
+        type: "chat.gif",
+        data: {
+          url,
+          width: dim(d.width, "width"),
+          height: dim(d.height, "height"),
+          title: d.title === undefined || d.title === null || d.title === "" ? null : cleanName(d.title, "title", 100),
+        },
+      };
+    }
+    case "react":
+      if (!isReaction(d.emoji)) throw new ProtocolError("bad_request", "unsupported reaction");
+      return { type: "react", data: { emoji: d.emoji } };
     case "skip":
       if (d.direction !== "next" && d.direction !== "previous") throw new ProtocolError("bad_request", "direction must be next or previous");
       return { type: "skip", data: { direction: d.direction } };

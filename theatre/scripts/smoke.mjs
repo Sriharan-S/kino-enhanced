@@ -315,6 +315,37 @@ const stopped = await eve.next("anchor", (a) => a.itemId === A.id && a.state ===
 assert.equal(stopped.position, 3);
 step("auto-advance off: playback stops exactly at the end of the item");
 
+// --- chat, GIFs, reactions, system messages (§18)
+eve.send("chat.send", { text: "  Popcorn ready?  " });
+const said = await host2.next("chat", (m) => m.kind === "text" && m.from === eveWelcome.self.id);
+assert.equal(said.text, "Popcorn ready?");
+for (let i = 0; i < 4; i++) eve.send("chat.send", { text: `msg ${i}` });
+eve.send("chat.send", { text: "one too many" });
+assert.equal((await eve.next("error")).code, "rate_limited");
+step("chat: text reaches everyone; the 6th message in 5 s is rate limited");
+
+await new Promise((r) => setTimeout(r, 5200)); // let the rate window pass
+eve.send("chat.gif", { url: "https://media.giphy.com/media/abc123/giphy.gif", width: 480, height: 270, title: "Popcorn" });
+const gif = await host2.next("chat", (m) => m.kind === "gif");
+assert.equal(gif.gif.width, 480);
+eve.send("chat.gif", { url: "https://evil.example/x.gif" });
+assert.equal((await eve.next("error")).code, "bad_request");
+eve.send("react", { emoji: "🎉" });
+assert.equal((await host2.next("react")).emoji, "🎉");
+step("GIFs only from GIF services; reactions are broadcast");
+
+const [frank, frankWelcome] = await join(recoded.code, screenId, randomBytes(32), "Frank");
+const history = frankWelcome.chat.map((m) => m.text);
+assert.ok(history.includes("Popcorn ready?"), "late joiners get the history");
+assert.ok(history.includes("Eve joined") && history.some((t) => t?.startsWith("Now playing:")), "system messages");
+assert.ok(history.includes("Carol is now a co-host"));
+host2.send("viewer.mute", { viewer: eveWelcome.self.id, muted: true });
+await eve.next("viewers", (l) => me(l, eveWelcome.self.id)?.muted === true);
+eve.send("chat.send", { text: "can you hear me" });
+assert.match((await eve.next("error")).message, /muted/);
+frank.close();
+step(`history (${history.length} messages incl. joins, roles, now playing) reaches late joiners; muted viewers can't chat`);
+
 // --- transfer ownership (§7.5) and close
 host2.send("host.transfer", { viewer: carolId });
 const transferred = await carol.next("viewers", (l) => me(l, carolId)?.isHost === true);
