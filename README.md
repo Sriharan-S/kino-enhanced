@@ -171,12 +171,12 @@ Tasks are worked through in order and checked off as they are completed. Windows
 
 | #     | Task                              | Details                                                                                 | Status |
 | ----- | --------------------------------- | --------------------------------------------------------------------------------------- | ------ |
-| 10.1  | Windows: libmpv integration       | Embedded in WinUI 3 via a child HWND; overlays via windowed popups (prototype works)    | 🟨     |
+| 10.1  | Windows: libmpv integration       | libmpv in a child HWND; popups and side panels for everything drawn near the video      | ✅      |
 | 10.2  | Core playback                     | Play/pause/seek, previous/next; stops at the end of the last item                       | ✅      |
 | 10.3  | Smooth playback-rate control      | libmpv `speed` + scaletempo2 pitch correction, driven by the sync engine                | ✅      |
-| 10.4  | Audio track selection             | Choose among a file's audio tracks                                                      | ⬜     |
-| 10.5  | Fullscreen                        | Windows                                                                                 | ⬜     |
-| 10.6  | Keyboard shortcuts                | Space, arrows, F, M, etc.                                                               | ⬜     |
+| 10.4  | Audio track selection             | Picture & sound → Audio track (title, language, codec, channels)                        | ✅     |
+| 10.5  | Fullscreen                        | F / F11 / button; Esc exits; top bar and side panel hide                                | ✅     |
+| 10.6  | Keyboard shortcuts                | Space/K, ←/→ 5 s, J/L 10 s, ↑/↓ volume, M, F, Esc, N/P, Home; never while typing        | ✅     |
 | 10.7  | Linux / Android / Web players     | Same features on the other platforms                                                    | ⏸     |
 
 ### 11. Sync Engine
@@ -197,7 +197,7 @@ Tasks are worked through in order and checked off as they are completed. Windows
 | 11.12 | Buffering policy                  | Keep playing (default) / Wait for everyone, with host override                          | ⬜     |
 | 11.13 | Playlist transitions              | Theatre ends items on its alarm (host's duration); shorter copies wait, longer ones move on | ✅     |
 | 11.14 | Ready check                       | Prompt, live tally, 30 s timeout                                                        | ⬜     |
-| 11.15 | Personal sync offset              | Local ±ms nudge                                                                         | ⬜     |
+| 11.15 | Personal sync offset              | Picture & sound → Personal sync offset, ±2000 ms, applied in the drift formula          | ✅     |
 
 ### 12. Media Selection & Playlists
 
@@ -218,14 +218,14 @@ Tasks are worked through in order and checked off as they are completed. Windows
 | 12.13 | External media: direct URL        | Add link…; every viewer streams it with libmpv                                          | ✅     |
 | 12.14 | Mixed playlists                   | Local and link items mixed; YouTube pending                                             | 🟨    |
 | 12.15 | Auto-distribute external items    | External items reach every viewer automatically                                         | ✅     |
-| 12.16 | Resume position                   | Per-file last position (local only)                                                     | ⬜     |
+| 12.16 | Resume position                   | Saved every 5 s per file (local); used when playing outside a screen                    | ✅     |
 
 ### 13. Codec & Format Support
 
 | #     | Task                              | Details                                                                                 | Status |
 | ----- | --------------------------------- | --------------------------------------------------------------------------------------- | ------ |
-| 13.1  | Windows: full codec support       | libmpv/FFmpeg plus hardware decoding                                                    | ⬜     |
-| 13.2  | Unsupported-format messaging      | Clear message that names the codec                                                      | ⬜     |
+| 13.1  | Windows: full codec support       | libmpv/FFmpeg with `hwdec=auto-safe`                                                    | ✅     |
+| 13.2  | Unsupported-format messaging      | Decoder failures name the codec; files that can't open say why                          | ✅     |
 | 13.3  | Linux: full codec support         | libmpv                                                                                  | ⏸     |
 | 13.4  | Android: full codec support       | libmpv; hardware plus software fallback                                                 | ⏸     |
 | 13.5  | Web: push support to its limits   | MSE, WebAssembly remux, WebCodecs                                                       | ⏸     |
@@ -234,13 +234,13 @@ Tasks are worked through in order and checked off as they are completed. Windows
 
 | #     | Task                             | Details                                                                                 | Status |
 | ----- | -------------------------------- | --------------------------------------------------------------------------------------- | ------ |
-| 14.1  | Zoom & pan                       | 50%–400%                                                                                | ⬜     |
-| 14.2  | Aspect ratio override            | Original, 16:9, 4:3, 21:9, 2.35:1, 1:1                                                  | ⬜     |
-| 14.3  | Fit modes                        | Fit, fit width, fit height, stretch, fill                                               | ⬜     |
-| 14.4  | Volume                           | 0–100%                                                                                  | ⬜     |
-| 14.5  | Volume boost                     | Up to 200%, after a one-time disclaimer                                                 | ⬜     |
-| 14.6  | Persist preferences locally      | Global defaults plus per-file overrides                                                 | ⬜     |
-| 14.7  | Guarantee local-only             | No customisation in any theatre message                                                 | ⬜     |
+| 14.1  | Zoom & pan                       | 50–400%, with pan when zoomed in                                                        | ✅     |
+| 14.2  | Aspect ratio override            | Original, 16:9, 4:3, 21:9, 2.35:1, 1:1                                                  | ✅     |
+| 14.3  | Fit modes                        | Fit width/height become letterbox or crop depending on the window shape                 | ✅     |
+| 14.4  | Volume                           | 0–100%                                                                                  | ✅     |
+| 14.5  | Volume boost                     | Up to 200% after a one-time disclaimer                                                  | ✅     |
+| 14.6  | Persist preferences locally      | Defaults plus "Remember for this file only" in local prefs (`%LOCALAPPDATA%/Kino/<profile>/prefs.json`) | ✅     |
+| 14.7  | Guarantee local-only             | Kept in local prefs only; no theatre message carries them                               | ✅     |
 
 ### 15. Subtitles
 
