@@ -301,3 +301,8 @@ Tasks are worked through in order and checked off as they are completed. Windows
 | 17.4  | Android build                    | APK                                                                                     | ⏸     |
 | 17.5  | Web build & hosting              | Cloudflare Pages                                                                        | ⏸     |
 | 17.6  | Cross-platform sync test         | Every platform in the same screen together                                              | ⏸     |
+
+## Licence
+
+Kino Enhanced is free software under the [GNU General Public License v3.0 or later](LICENSE). This covers this repo
+(theatre, protocol, docs) and the platform apps.
