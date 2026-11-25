@@ -84,7 +84,8 @@ const resolved = await http("GET", `/resolve/${code.toLowerCase()}`);
 assert.equal(resolved.body.screenId, screenId);
 const viewer = connect(code);
 await viewer.opened;
-viewer.send("hello", { protocol: 1, token: token(randomBytes(32), screenId), name: "Viewer", device: "web" });
+const viewerSecret = randomBytes(32);
+viewer.send("hello", { protocol: 1, token: token(viewerSecret, screenId), name: "Viewer", device: "web" });
 const vw = await viewer.next("welcome");
 assert.equal(vw.self.isHost, false);
 await host.next("viewers", (list) => list.length === 2);
@@ -146,5 +147,105 @@ old.send("hello", { protocol: 0, token: token(randomBytes(32), screenId), name: 
 assert.equal((await old.next("error")).code, "update_required");
 step("protocol 0 client gets update_required");
 
-for (const c of [host, viewer, p1, p2, old]) c.close();
+// --- wrong-password rate limit (5 per token per minute)
+const limitedSecret = randomBytes(32);
+let lastCode;
+for (let i = 0; i < 6; i++) {
+  const c = connect(priv.body.code);
+  await c.opened;
+  c.send("hello", { protocol: 1, token: token(limitedSecret, priv.body.screenId), name: "Guess", device: "web", password: `guess${i}` });
+  lastCode = (await c.next("error")).code;
+  c.close();
+}
+assert.equal(lastCode, "rate_limited");
+step("6th wrong password in a minute is rate limited");
+
+for (const c of [p1, p2, old]) c.close();
+
+// ================================ Roles & permissions =====================================
+
+/** Joins `code` as a new or returning device; resolves with [client, welcome]. */
+async function join(screenCode, sid, secret, name, extra = {}) {
+  const c = connect(screenCode);
+  await c.opened;
+  c.send("hello", { protocol: 1, token: token(secret, sid), name, device: "windows", ...extra });
+  return [c, await c.next("welcome")];
+}
+const me = (list, id) => list.find((v) => v.id === id);
+
+const viewerId = vw.self.id;
+
+// --- a custom role grants exactly its permissions
+host.send("roles.create", { name: "DJ", colour: "#3d8be8", permissions: ["playback.toggle"], position: 5 });
+const rolesMsg = await viewer.next("roles", (rs) => rs.some((r) => r.name === "DJ"));
+const dj = rolesMsg.find((r) => r.name === "DJ");
+host.send("roles.assign", { viewer: viewerId, role: dj.id, assigned: true });
+const withDj = await viewer.next("viewers", (l) => me(l, viewerId)?.roles.includes(dj.id));
+assert.ok(me(withDj, viewerId).permissions.includes("playback.toggle"));
+viewer.send("play");
+await viewer.next("anchor", (a) => a.state === "playing" && a.seq > a3.seq);
+viewer.send("seek", { to: 10 });
+assert.equal((await viewer.next("error")).code, "forbidden");
+step("role DJ lets the viewer play, but not seek");
+
+// --- no privilege escalation
+viewer.send("roles.create", { name: "Nope", permissions: [] });
+assert.equal((await viewer.next("error")).code, "forbidden"); // no roles.manage
+host.send("viewer.overrides", { viewer: viewerId, allow: ["roles.manage"], deny: [] });
+await viewer.next("viewers", (l) => me(l, viewerId)?.permissions.includes("roles.manage"));
+viewer.send("roles.create", { name: "Banhammer", permissions: ["viewers.ban"] });
+assert.match((await viewer.next("error")).message, /don't have/);
+viewer.send("roles.update", { id: dj.id, permissions: ["playback.toggle", "playback.seek"] });
+assert.equal((await viewer.next("error")).code, "forbidden"); // DJ is not below the viewer's own rank
+viewer.send("roles.create", { name: "Helper", permissions: ["chat.send"] });
+const helper = (await host.next("roles", (rs) => rs.some((r) => r.name === "Helper"))).find((r) => r.name === "Helper");
+assert.ok(helper.position < dj.position, "created below the creator's own rank");
+step("viewers can't grant what they lack or edit roles at their own rank");
+
+// --- co-host handover (§7.2) and the host's return (§7.4)
+const carolSecret = randomBytes(32);
+const [carol, carolWelcome] = await join(code, screenId, carolSecret, "Carol");
+const carolId = carolWelcome.self.id;
+host.send("cohosts.set", { viewers: [carolId] });
+await carol.next("viewers", (l) => me(l, carolId)?.coHost === 1);
+host.close();
+const acting = await carol.next("viewers", (l) => me(l, carolId)?.actingHost === true);
+assert.ok(!acting.some((v) => v.isHost), "host gone");
+carol.send("seek", { to: 42 });
+await viewer.next("anchor", (a) => a.position === 42);
+const [host2, hw2] = await join(code, screenId, hostSecret, "Host");
+assert.equal(hw2.self.isHost, true);
+await carol.next("viewers", (l) => me(l, carolId)?.actingHost === false && l.some((v) => v.isHost));
+step("host leaves → co-host becomes acting host and can seek; host returns and takes over");
+
+// --- hierarchy: a co-host can't act on the host or use host-only actions
+carol.send("viewer.kick", { viewer: hw2.self.id });
+assert.equal((await carol.next("error")).code, "forbidden");
+carol.send("cohosts.set", { viewers: [] });
+assert.equal((await carol.next("error")).code, "forbidden");
+step("co-host can't kick the host or change co-hosts");
+
+// --- kick (can rejoin, keeps roles) and ban (can't)
+host2.send("viewer.kick", { viewer: viewerId });
+assert.equal((await viewer.next("error")).code, "kicked");
+const [viewer2, vw2] = await join(code, screenId, viewerSecret, "Viewer");
+assert.ok(vw2.self.roles.includes(dj.id), "roles survive a kick");
+host2.send("viewer.ban", { viewer: viewerId });
+assert.equal((await viewer2.next("error")).code, "banned");
+const banned = connect(code);
+await banned.opened;
+banned.send("hello", { protocol: 1, token: token(viewerSecret, screenId), name: "Viewer", device: "windows" });
+assert.equal((await banned.next("error")).code, "banned");
+step("kicked viewer can rejoin with roles intact; banned viewer can't");
+
+// --- transfer ownership (§7.5) and close
+host2.send("host.transfer", { viewer: carolId });
+const transferred = await carol.next("viewers", (l) => me(l, carolId)?.isHost === true);
+assert.equal(me(transferred, hw2.self.id).coHost, 1, "old host becomes top co-host");
+carol.send("screen.close");
+assert.equal((await host2.next("error")).code, "closed");
+assert.equal((await http("GET", `/resolve/${code}`)).status, 404);
+step("transfer makes Carol host (old host → co-host #1); she closes the screen");
+
+for (const c of [host, viewer, viewer2, banned, carol, host2]) c.close();
 console.log("\nAll smoke checks passed.");

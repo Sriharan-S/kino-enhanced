@@ -1,0 +1,1 @@
+{ "type": "roles.create", "data": { "name": "DJ", "colour": "#3d8be8", "permissions": ["playback.toggle", "playback.seek", "playlist.add"] } }

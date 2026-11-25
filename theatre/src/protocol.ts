@@ -1,5 +1,6 @@
 // Kino protocol v1: wire types and validation for theatre <-> client messages.
 // The language-neutral spec lives in /protocol/README.md; examples in /protocol/examples.
+import { isPermission, type Permission, type Role } from "./rbac";
 
 export const PROTOCOL_VERSION = 1;
 export const MIN_CLIENT_PROTOCOL = 1;
@@ -10,6 +11,7 @@ export const LIMITS = {
   itemName: 260,
   url: 2048,
   password: 128,
+  roleName: 32,
   maxViewersCap: 25,
   defaultMaxViewers: 10,
   messageBytes: 16 * 1024,
@@ -47,6 +49,24 @@ export interface ViewerInfo {
   isHost: boolean;
   rtt: number | null;
   buffering: boolean;
+  /** Custom role ids (co-host and viewer are implied by `coHost` and by being here). */
+  roles: string[];
+  /** 1-based co-host priority, or null if not a co-host. */
+  coHost: number | null;
+  /** Standing in for the absent host (§7.2). */
+  actingHost: boolean;
+  muted: boolean;
+  /** Per-viewer overrides (§8.4): deny beats allow beats roles. */
+  allow: Permission[];
+  deny: Permission[];
+  /** Effective permissions, computed by the theatre. */
+  permissions: Permission[];
+}
+
+/** A co-host in priority order, present or not (viewer lists only include who is online). */
+export interface CoHostInfo {
+  id: string;
+  name: string;
 }
 
 // ---- Client -> theatre --------------------------------------------------------------
@@ -60,7 +80,18 @@ export type ClientMessage =
   | { type: "load"; data: { kind: "local" | "url"; name: string; duration: number | null; url?: string } }
   | { type: "reanchor"; data: { position: number; at: number } }
   | { type: "buffering"; data: { value: boolean } }
-  | { type: "rtt"; data: { value: number } };
+  | { type: "rtt"; data: { value: number } }
+  | { type: "roles.create"; data: { name: string; colour: string | null; permissions: Permission[]; position?: number } }
+  | { type: "roles.update"; data: { id: string; name?: string; colour?: string | null; permissions?: Permission[]; position?: number } }
+  | { type: "roles.delete"; data: { id: string } }
+  | { type: "roles.assign"; data: { viewer: string; role: string; assigned: boolean } }
+  | { type: "viewer.overrides"; data: { viewer: string; allow: Permission[]; deny: Permission[] } }
+  | { type: "viewer.mute"; data: { viewer: string; muted: boolean } }
+  | { type: "viewer.kick"; data: { viewer: string } }
+  | { type: "viewer.ban"; data: { viewer: string } }
+  | { type: "cohosts.set"; data: { viewers: string[] } }
+  | { type: "host.transfer"; data: { viewer: string } }
+  | { type: "screen.close"; data: Record<string, never> };
 
 // ---- Theatre -> client --------------------------------------------------------------
 
@@ -73,6 +104,7 @@ export type ErrorCode =
   | "full"
   | "banned"
   | "rate_limited"
+  | "kicked"
   | "closed";
 
 export type ServerMessage =
@@ -82,6 +114,8 @@ export type ServerMessage =
         self: ViewerInfo;
         screen: { code: string; name: string; visibility: Visibility; maxViewers: number; showDevices: boolean };
         viewers: ViewerInfo[];
+        roles: Role[];
+        coHosts: CoHostInfo[];
         item: Item | null;
         anchor: Anchor;
         serverTime: number;
@@ -91,6 +125,8 @@ export type ServerMessage =
   | { type: "anchor"; data: Anchor }
   | { type: "item"; data: Item | null }
   | { type: "viewers"; data: ViewerInfo[] }
+  | { type: "roles"; data: Role[] }
+  | { type: "cohosts"; data: CoHostInfo[] }
   | { type: "error"; data: { code: ErrorCode; message: string } };
 
 // ---- Validation ----------------------------------------------------------------------
@@ -128,6 +164,37 @@ export function cleanName(v: unknown, field: string, max: number): string {
   const s = str(v, field, max * 4).replace(/[\u0000-\u001f\u007f]/g, "").replace(/\s+/g, " ").trim();
   if (s.length < 1 || s.length > max) throw new ProtocolError("bad_request", `${field} must be 1-${max} characters`);
   return s;
+}
+
+const VIEWER_ID = /^[0-9a-f]{12}$/;
+const ROLE_ID = /^[a-z0-9]{1,16}$/;
+const COLOUR = /^#[0-9a-f]{6}$/i;
+
+function viewerId(v: unknown, field = "viewer"): string {
+  if (typeof v !== "string" || !VIEWER_ID.test(v)) throw new ProtocolError("bad_request", `${field} must be a viewer id`);
+  return v;
+}
+
+function roleId(v: unknown): string {
+  if (typeof v !== "string" || !ROLE_ID.test(v)) throw new ProtocolError("bad_request", "role must be a role id");
+  return v;
+}
+
+function colour(v: unknown): string | null {
+  if (v === null) return null;
+  if (typeof v !== "string" || !COLOUR.test(v)) throw new ProtocolError("bad_request", "colour must be #rrggbb or null");
+  return v.toLowerCase();
+}
+
+function permissions(v: unknown, field = "permissions"): Permission[] {
+  if (!Array.isArray(v) || v.length > 64) throw new ProtocolError("bad_request", `${field} must be an array`);
+  for (const p of v) if (!isPermission(p)) throw new ProtocolError("bad_request", `unknown permission ${String(p)}`);
+  return [...new Set(v as Permission[])];
+}
+
+function bool(v: unknown, field: string): boolean {
+  if (typeof v !== "boolean") throw new ProtocolError("bad_request", `${field} must be boolean`);
+  return v;
 }
 
 export function parseClientMessage(raw: string | ArrayBuffer): ClientMessage {
@@ -180,6 +247,48 @@ export function parseClientMessage(raw: string | ArrayBuffer): ClientMessage {
       return { type: "buffering", data: { value: d.value } };
     case "rtt":
       return { type: "rtt", data: { value: num(d.value, "value", 0, 60_000) } };
+    case "roles.create":
+      return {
+        type: "roles.create",
+        data: {
+          name: cleanName(d.name, "name", LIMITS.roleName),
+          colour: d.colour === undefined ? null : colour(d.colour),
+          permissions: permissions(d.permissions ?? []),
+          position: d.position === undefined ? undefined : num(d.position, "position", 1, 899),
+        },
+      };
+    case "roles.update":
+      return {
+        type: "roles.update",
+        data: {
+          id: roleId(d.id),
+          name: d.name === undefined ? undefined : cleanName(d.name, "name", LIMITS.roleName),
+          colour: d.colour === undefined ? undefined : colour(d.colour),
+          permissions: d.permissions === undefined ? undefined : permissions(d.permissions),
+          position: d.position === undefined ? undefined : num(d.position, "position", 1, 899),
+        },
+      };
+    case "roles.delete":
+      return { type: "roles.delete", data: { id: roleId(d.id) } };
+    case "roles.assign":
+      return { type: "roles.assign", data: { viewer: viewerId(d.viewer), role: roleId(d.role), assigned: bool(d.assigned, "assigned") } };
+    case "viewer.overrides":
+      return {
+        type: "viewer.overrides",
+        data: { viewer: viewerId(d.viewer), allow: permissions(d.allow ?? [], "allow"), deny: permissions(d.deny ?? [], "deny") },
+      };
+    case "viewer.mute":
+      return { type: "viewer.mute", data: { viewer: viewerId(d.viewer), muted: bool(d.muted, "muted") } };
+    case "viewer.kick":
+    case "viewer.ban":
+    case "host.transfer":
+      return { type: msg.type, data: { viewer: viewerId(d.viewer) } };
+    case "cohosts.set": {
+      if (!Array.isArray(d.viewers) || d.viewers.length > 25) throw new ProtocolError("bad_request", "viewers must be an array");
+      return { type: "cohosts.set", data: { viewers: [...new Set(d.viewers.map((v) => viewerId(v)))] } };
+    }
+    case "screen.close":
+      return { type: "screen.close", data: {} };
     default:
       throw new ProtocolError("bad_request", `unknown type ${msg.type}`);
   }

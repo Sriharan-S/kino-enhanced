@@ -1,0 +1,1 @@
+{ "type": "roles.update", "data": { "id": "r1", "permissions": ["playback.toggle", "playback.seek"] } }

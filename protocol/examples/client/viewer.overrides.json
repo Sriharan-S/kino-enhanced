@@ -1,0 +1,1 @@
+{ "type": "viewer.overrides", "data": { "viewer": "0f9e8d7c6b5a", "allow": ["playback.skip"], "deny": ["chat.gif"] } }

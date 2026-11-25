@@ -60,23 +60,38 @@ Envelope: `{ "type": "<type>", "data": { ... } }`. Messages are limited to 16 Ki
 | `ping` | `{ t0 }` | joined | `t0` is in the **client's** monotonic ms clock; it is echoed back. |
 | `rtt` | `{ value }` | joined | Your measured round-trip time in ms, so others can see it. |
 | `buffering` | `{ value }` | joined | Sent only when the state changes. |
-| `play` | `{}` | control | Scheduled start: `at = now + lead`. |
-| `pause` | `{}` | control | Position frozen at the theatre's expected position. |
-| `seek` | `{ to }` | control | Keeps play/pause state. |
-| `load` | `{ kind: "local"|"url", name, duration, url? }` | control | Sets the current item and resets the anchor to paused at 0. |
-| `reanchor` | `{ position, at }` | host | Host's real position at theatre time `at` (clamped to ±2 s). |
+| `play` | `{}` | `playback.toggle` | Scheduled start: `at = now + lead`. |
+| `pause` | `{}` | `playback.toggle` | Position frozen at the theatre's expected position. |
+| `seek` | `{ to }` | `playback.seek` | Keeps play/pause state. |
+| `load` | `{ kind: "local"|"url", name, duration, url? }` | `playlist.add` / `playlist.add_external` (url) | Sets the current item and resets the anchor to paused at 0. |
+| `reanchor` | `{ position, at }` | timeline authority | The host, or the acting host while the host is away. Real position at theatre time `at` (clamped to ±2 s). |
+| `roles.create` | `{ name, colour, permissions, position? }` | `roles.manage` | New role ranked below your own (default: just above the highest role you can manage). |
+| `roles.update` | `{ id, name?, colour?, permissions?, position? }` | `roles.manage` | Roles below your own. Co-host is fixed; for Viewer only `permissions` can change. |
+| `roles.delete` | `{ id }` | `roles.manage` | Custom roles below your own. Removed from everyone. |
+| `roles.assign` | `{ viewer, role, assigned }` | `roles.assign` | Custom role below your own, to a viewer ranked below you. |
+| `viewer.overrides` | `{ viewer, allow, deny }` | `roles.manage` | Replaces that viewer's per-viewer overrides. Target ranked below you. |
+| `viewer.mute` | `{ viewer, muted }` | `viewers.mute` | Chat mute. Target ranked below you. |
+| `viewer.kick` | `{ viewer }` | `viewers.kick` | Disconnects them (`kicked`); they can rejoin. |
+| `viewer.ban` | `{ viewer }` | `viewers.ban` | Disconnects them (`banned`) and bans their token for the screen's lifetime. |
+| `cohosts.set` | `{ viewers }` | host only | Co-hosts in priority order (first = takes over first). |
+| `host.transfer` | `{ viewer }` | host only | New host must be present. The old host becomes co-host #1. |
+| `screen.close` | `{}` | host only | Everyone gets `closed`; the screen is deleted. |
 
-"Control" currently means the host. Later this becomes the RBAC permissions `playback.toggle`, `playback.seek` and `playlist.add`.
+**Permissions** are checked by the theatre on every message (wiki docs §8). You can't grant permissions you don't have yourself,
+and you can only act on roles and viewers ranked strictly **below** you: host 1000, co-host and acting host 900, custom roles
+1–899, Viewer 0. The acting host has every permission, but host-only actions stay with the host.
 
 ### 4.2 Theatre → client
 
 | Type | Data | When |
 |---|---|---|
-| `welcome` | `{ self, screen, viewers, item, anchor, serverTime }` | Reply to a successful `hello` |
+| `welcome` | `{ self, screen, viewers, roles, coHosts, item, anchor, serverTime }` | Reply to a successful `hello` |
 | `pong` | `{ t0, ts }` | Reply to `ping`. `ts` is theatre time when it was handled. |
 | `anchor` | `Anchor` | Any timeline change |
 | `item` | `Item \| null` | Current item changed |
-| `viewers` | `ViewerInfo[]` | Anyone joins, leaves or changes RTT/buffering |
+| `viewers` | `ViewerInfo[]` | Anyone joins or leaves, or their RTT, buffering, roles, co-host status or permissions change |
+| `roles` | `Role[]` | Roles were created, edited or deleted |
+| `cohosts` | `{ id, name }[]` | The co-host list changed. Priority order, **including co-hosts who aren't present** (viewer lists only show who is online). |
 | `error` | `{ code, message }` | Rejected message. Fatal errors are followed by a close with code `4001`. |
 
 ### 4.3 Shared types
@@ -84,8 +99,24 @@ Envelope: `{ "type": "<type>", "data": { ... } }`. Messages are limited to 16 Ki
 ```ts
 Anchor     = { itemId: string|null, state: "playing"|"paused", position: number, rate: number, at: number, seq: number }
 Item       = { id: string, kind: "local"|"url", name: string, duration: number|null, url?: string }
-ViewerInfo = { id: string, name: string, device: Device|null, isHost: boolean, rtt: number|null, buffering: boolean }
+ViewerInfo = { id: string, name: string, device: Device|null, isHost: boolean, rtt: number|null, buffering: boolean,
+               roles: string[],          // custom role ids
+               coHost: number|null,      // 1-based co-host priority
+               actingHost: boolean,      // standing in for the absent host
+               muted: boolean,           // chat-muted
+               allow: Permission[],      // per-viewer overrides: deny beats allow beats roles
+               deny: Permission[],
+               permissions: Permission[] // effective, computed by the theatre
+             }
+Role       = { id: string, name: string, colour: string|null, position: number, permissions: Permission[], builtin: boolean }
+Permission = "playback.toggle" | "playback.seek" | "playback.skip" | "playlist.add" | "playlist.add_external"
+           | "playlist.remove" | "playlist.reorder" | "subtitles.share" | "screen.ready_check" | "screen.settings"
+           | "screen.invite" | "chat.send" | "chat.gif" | "chat.react" | "viewers.mute" | "viewers.kick"
+           | "viewers.ban" | "roles.assign" | "roles.manage"
 ```
+
+Built-in roles: `cohost` (position 900, every permission, fixed) and `viewer` (position 0, everyone has it; by default
+`chat.send`, `chat.gif`, `chat.react`). The host isn't a role: it is whoever holds the owner token.
 
 `device` is `null` when the screen's **Show devices** setting is off.
 
@@ -98,10 +129,16 @@ Clients ignore an anchor whose `seq` is lower than the last one they applied.
 
 ### 4.4 Error codes
 
-`bad_request` · `update_required` · `not_found` · `forbidden` · `wrong_password` · `full` · `banned` · `rate_limited` · `closed`
+`bad_request` · `update_required` · `not_found` · `forbidden` · `wrong_password` · `full` · `banned` · `kicked` · `rate_limited` · `closed`
+
+`rate_limited` on `hello` means too many wrong passwords: 5 per token per minute, 30 per screen per minute.
 
 ## 5. Typical flows
 
 **Create and host:** `POST /screens`, then open the WebSocket and send `hello{claim}`. The theatre replies `welcome` with `self.isHost = true`. The host then sends `load` and `play`.
+
+**Host away (§7.2):** when the host disconnects, the highest-priority co-host who is present becomes acting host
+(`actingHost: true`) and the timeline authority (it re-anchors). When the host reconnects with the same token, it takes back
+control at once. If the host and all co-hosts are away for 15 minutes, the screen closes.
 
 **Join:** `GET /resolve/<code>` gives the `screenId`. The client derives its token, opens the WebSocket, sends `hello{password?}` and receives `welcome`. It then runs a clock-sync burst (8 × `ping`) and catches up from `anchor`.

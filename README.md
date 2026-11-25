@@ -82,11 +82,11 @@ Tasks are worked through in order and checked off as they are completed. Windows
 | 2.4   | Non-unique names                  | Screen names and viewer names do not have to be unique                                  | ✅     |
 | 2.5   | Join screen                       | From the lobby or by code; private screens prompt for the password                      | ✅     |
 | 2.6   | Leave screen                      | Leave button returns to the lobby; reconnect grace period pending                       | 🟨    |
-| 2.7   | Viewer list                       | Host, co-hosts and viewers, with status icons                                           | ⬜     |
-| 2.8   | Host controls the screen          | The host has full control by default                                                    | ⬜     |
+| 2.7   | Viewer list                       | Side panel: Host / Acting host / Co-host #n / roles, device, ping, mute icon; away co-hosts listed | ✅     |
+| 2.8   | Host controls the screen          | The host has full control by default                                                    | ✅     |
 | 2.9   | Viewer cap                        | 2–25 (default 10), chosen when creating; enforced by the theatre                        | ✅     |
 | 2.10  | Screen settings                   | Name, visibility, password, devices toggle, buffering policy, auto-advance              | ⬜     |
-| 2.11  | Screen lifecycle                  | Empty-screen cleanup via DO alarm done; host-absence timeout pending                    | 🟨    |
+| 2.11  | Screen lifecycle                  | Empty screen closes after 5 min; host + co-hosts absent 15 min closes it; host can close it | ✅     |
 
 ### 3. Identity & Reconnect (no accounts)
 
@@ -95,40 +95,40 @@ Tasks are worked through in order and checked off as they are completed. Windows
 | 3.1   | No accounts                       | Display name only                                                                       | ✅     |
 | 3.2   | Device secret                     | Random secret generated and stored on the device                                        | ✅     |
 | 3.3   | Per-screen token                  | HMAC(deviceSecret, screenId), so viewers can't be tracked across screens                | ✅     |
-| 3.4   | Reconnect with same identity      | Same token on reconnect restores identity and host status; roles pending RBAC           | 🟨    |
+| 3.4   | Reconnect with same identity      | Same token restores host status, co-host rank, roles, overrides and mute                | ✅     |
 | 3.5   | Host ownership by token           | The host is identified by the owner token, not the name                                 | ✅     |
 
 ### 4. Host Handover
 
 | #     | Task                              | Details                                                                                 | Status |
 | ----- | --------------------------------- | --------------------------------------------------------------------------------------- | ------ |
-| 4.1   | Co-host role                      | Host appoints co-hosts in priority order                                                | ⬜     |
-| 4.2   | Host disconnect → Acting Host     | Highest-priority present co-host takes control; playback continues                      | ⬜     |
-| 4.3   | No co-host present                | Playback continues; host-only actions are locked                                        | ⬜     |
-| 4.4   | Host returns → regains control    | Acting Host goes back to their previous role                                            | ⬜     |
-| 4.5   | Absence timeout                   | Screen closes after the host and all co-hosts have been absent for 15 min               | ⬜     |
-| 4.6   | Transfer ownership                | Host permanently hands the screen to another viewer                                     | ⬜     |
+| 4.1   | Co-host role                      | Host makes co-hosts from the viewers panel; move up/down for priority                   | ✅     |
+| 4.2   | Host disconnect → Acting Host     | Highest-priority present co-host becomes acting host and timeline authority (re-anchors) | ✅     |
+| 4.3   | No co-host present                | Anchor keeps running; viewers keep their own permissions                                | ✅     |
+| 4.4   | Host returns → regains control    | Host reconnects with the owner token and takes over at once                             | ✅     |
+| 4.5   | Absence timeout                   | Screen closes after the host and all co-hosts have been absent for 15 min               | ✅     |
+| 4.6   | Transfer ownership                | Old host becomes co-host #1; new host must be present                                   | ✅     |
 
 ### 5. Roles & Permissions (RBAC, Discord-style)
 
 | #     | Task                              | Details                                                                                 | Status |
 | ----- | --------------------------------- | --------------------------------------------------------------------------------------- | ------ |
-| 5.1   | Permission catalogue              | Playback, playlist, subtitles, screen, chat, viewer moderation, roles                   | ⬜     |
-| 5.2   | Role model                        | Named, coloured, ranked roles with permission sets                                      | ⬜     |
-| 5.3   | Default roles                     | Host, Co-host, Viewer                                                                   | ⬜     |
-| 5.4   | Create / edit / delete roles      | Limited to roles below your own (hierarchy)                                             | ⬜     |
-| 5.5   | Assign roles to viewers           | One or more roles per viewer                                                            | ⬜     |
-| 5.6   | Per-viewer allow / deny overrides | Deny > allow > roles                                                                    | ⬜     |
-| 5.7   | Enforcement in the Screen DO      | Every action is checked by the theatre, not just hidden in the UI                       | ⬜     |
-| 5.8   | Permission-aware UI               | Disallowed controls are disabled or hidden                                              | ⬜     |
+| 5.1   | Permission catalogue              | 19 permissions; theatre `rbac.ts`, client `Permissions.cs`                              | ✅     |
+| 5.2   | Role model                        | Name, colour, rank 1–899, permissions; up to 20 custom roles                            | ✅     |
+| 5.3   | Default roles                     | Host (owner token, rank 1000), Co-host (900, all), Viewer (0, chat by default)          | ✅     |
+| 5.4   | Create / edit / delete roles      | Roles page; only below your own rank, and only permissions you have                     | ✅     |
+| 5.5   | Assign roles to viewers           | Viewer menu → Roles; viewers ranked below you only                                      | ✅     |
+| 5.6   | Per-viewer allow / deny overrides | Viewer menu → Permissions…: Inherit / Allow / Deny per permission                       | ✅     |
+| 5.7   | Enforcement in the Screen DO      | Every message checked by the Screen DO; covered by unit + smoke tests                   | ✅     |
+| 5.8   | Permission-aware UI               | Playback controls, viewer menu and roles page follow effective permissions              | ✅     |
 
 ### 6. Moderation
 
 | #     | Task                              | Details                                                                                 | Status |
 | ----- | --------------------------------- | --------------------------------------------------------------------------------------- | ------ |
-| 6.1   | Kick                              | Remove a viewer (they can rejoin)                                                       | ⬜     |
-| 6.2   | Ban                               | Block the token for the screen's lifetime                                               | ⬜     |
-| 6.3   | Chat mute                         | Stop a viewer from sending chat, GIFs and reactions                                     | ⬜     |
+| 6.1   | Kick                              | Remove a viewer (they can rejoin)                                                       | ✅     |
+| 6.2   | Ban                               | Block the token for the screen's lifetime                                               | ✅     |
+| 6.3   | Chat mute                         | Mute flag stored and shown; enforced once chat exists                                   | 🟨    |
 
 ### 7. Lobby
 
@@ -153,7 +153,7 @@ Tasks are worked through in order and checked off as they are completed. Windows
 | 8.2   | Invite link                       | `kino://join/<theatre>/<code>` plus a web link                                          | ⬜     |
 | 8.3   | Join by code                      | Code looked up on all theatres in parallel; down theatres skipped                       | ✅     |
 | 8.4   | Private join                      | Code plus password; wrong password rejected                                             | ✅     |
-| 8.5   | Password security                 | PBKDF2-SHA256 hashing done; attempt limiting pending                                    | 🟨    |
+| 8.5   | Password security                 | PBKDF2-SHA256; 5 wrong passwords per token and 30 per screen per minute                 | ✅     |
 | 8.6   | Regenerate code                   | Old code and link stop working                                                          | ⬜     |
 
 ### 9. Device & Latency Visibility
