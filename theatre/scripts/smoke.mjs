@@ -2,6 +2,7 @@
 // Usage: node scripts/smoke.mjs [baseUrl] [--slow]    (--slow adds a ~65 s reconnect-grace expiry check)
 import { createHmac, randomBytes } from "node:crypto";
 import assert from "node:assert/strict";
+import { gunzipSync, gzipSync } from "node:zlib";
 
 const BASE = process.argv.slice(2).find((a) => !a.startsWith("--")) ?? "http://127.0.0.1:8787";
 const WS_BASE = BASE.replace(/^http/, "ws");
@@ -252,7 +253,8 @@ step("dropped viewer shows as reconnecting and gets their seat back; leave remov
 
 // --- screen settings (§6.3) and code regeneration (§11)
 viewer2.close();
-const [eve, eveWelcome] = await join(code, screenId, randomBytes(32), "Eve");
+const eveSecret0 = randomBytes(32);
+const [eve, eveWelcome] = await join(code, screenId, eveSecret0, "Eve");
 eve.send("settings.update", { name: "Hacked" });
 assert.equal((await eve.next("error")).code, "forbidden");
 host2.send("settings.update", { visibility: "private" });
@@ -345,6 +347,36 @@ eve.send("chat.send", { text: "can you hear me" });
 assert.match((await eve.next("error")).message, /muted/);
 frank.close();
 step(`history (${history.length} messages incl. joins, roles, now playing) reaches late joiners; muted viewers can't chat`);
+
+// --- shared subtitles (§17): HTTP upload/download with the per-screen token
+const srt = "1\n00:00:01,000 --> 00:00:03,000\nHello, subtitles!\n";
+const subsUrl = (q = "") => `${BASE}/screens/${recoded.code}/subs${q}`;
+const upload = (secret, body, q) =>
+  fetch(subsUrl(q), { method: "POST", headers: { Authorization: `Bearer ${token(secret, screenId)}` }, body });
+const itemForSubs = pl.find((i) => i.name === "Long B.mkv");
+const q = `?item=${itemForSubs.id}&format=srt&name=${encodeURIComponent("Long B.en.srt")}`;
+
+assert.equal((await upload(randomBytes(32), gzipSync(srt), q)).status, 403, "strangers can't upload");
+const eveSecret = eveSecret0;
+assert.equal((await upload(eveSecret, gzipSync(srt), q)).status, 403, "viewers lack subtitles.share");
+assert.equal((await upload(hostSecret, Buffer.from(srt), q)).status, 400, "must be gzip");
+const up = await upload(hostSecret, gzipSync(srt), q);
+assert.equal(up.status, 201);
+const meta = await up.json();
+const subsList = await eve.next("subs", (l) => l.some((x) => x.id === meta.id));
+assert.equal(subsList.find((x) => x.id === meta.id).itemId, itemForSubs.id);
+const dl = await fetch(subsUrl(`/${meta.id}`), { headers: { Authorization: `Bearer ${token(eveSecret, screenId)}` } });
+assert.equal(dl.status, 200);
+assert.equal(gunzipSync(Buffer.from(await dl.arrayBuffer())).toString(), srt);
+assert.equal((await fetch(subsUrl(`/${meta.id}`))).status, 403, "download needs a member token");
+await eve.next("chat", (m) => m.kind === "system" && m.text.includes("shared subtitles"));
+eve.send("subs.unshare", { id: meta.id });
+assert.equal((await eve.next("error")).code, "forbidden");
+const up2 = await (await upload(hostSecret, gzipSync(srt), q)).json();
+host2.send("playlist.remove", { id: itemForSubs.id });
+await eve.next("subs", (l) => !l.some((x) => x.id === up2.id));
+assert.equal((await fetch(subsUrl(`/${up2.id}`), { headers: { Authorization: `Bearer ${token(eveSecret, screenId)}` } })).status, 404);
+step("subtitles: host uploads (gzip, token-checked), members download, viewers can't share or unshare, removed with their item");
 
 // --- transfer ownership (§7.5) and close
 host2.send("host.transfer", { viewer: carolId });

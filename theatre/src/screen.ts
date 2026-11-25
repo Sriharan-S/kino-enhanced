@@ -23,6 +23,7 @@ import {
 import * as C from "./chat";
 import * as P from "./playlist";
 import * as R from "./rbac";
+import * as S from "./subs";
 
 /** How long an empty screen survives before it is closed (reconnect window). */
 const EMPTY_SCREEN_TTL_MS = 5 * 60_000;
@@ -84,6 +85,9 @@ interface ScreenState {
   failedPasswords: Record<string, number[]>;
   /** Who was acting host at the last presence change, to announce handovers. */
   actingHost: string | null;
+  /** Shared subtitle files (metadata; contents under "sub:<id>"). */
+  subs: S.SubMeta[];
+  subSeq: number;
 }
 
 /** Per-connection data, kept on the socket so it survives hibernation. */
@@ -149,6 +153,8 @@ export class ScreenDO extends DurableObject<Env> {
       away: {},
       failedPasswords: {},
       actingHost: null,
+      subs: [],
+      subSeq: 0,
     };
     await this.save();
     await this.scheduleAlarm();
@@ -156,6 +162,18 @@ export class ScreenDO extends DurableObject<Env> {
 
   override async fetch(request: Request): Promise<Response> {
     if (!this.state) return new Response("screen closed", { status: 404 });
+    const parts = new URL(request.url).pathname.split("/").filter(Boolean);
+    if (parts[2] === "subs") {
+      try {
+        return await this.subsRequest(request, parts[3]);
+      } catch (e) {
+        if (e instanceof ProtocolError) {
+          const status = e.code === "forbidden" ? 403 : e.code === "not_found" ? 404 : 400;
+          return Response.json({ error: { code: e.code, message: e.message } }, { status });
+        }
+        throw e;
+      }
+    }
     if (request.headers.get("Upgrade") !== "websocket") return new Response("expected websocket", { status: 426 });
 
     const pair = new WebSocketPair();
@@ -311,6 +329,7 @@ export class ScreenDO extends DurableObject<Env> {
         coHosts: this.coHostList(),
         playlist: s.playlist,
         chat: this.chat.messages,
+        subs: s.subs,
         item: s.item,
         anchor: s.anchor,
         serverTime: Date.now(),
@@ -376,6 +395,20 @@ export class ScreenDO extends DurableObject<Env> {
         return;
       }
 
+      case "subs.unshare": {
+        const sub = s.subs.find((x) => x.id === msg.data.id);
+        if (!sub) throw new ProtocolError("not_found", "no such subtitles");
+        // The sharer, or anyone with subtitles.share who outranks them.
+        const sharerKey = Object.keys(s.members).find((k) => k.startsWith(sub.from));
+        const mine = sub.from === me.id;
+        if (!mine) {
+          this.require(me, "subtitles.share");
+          if (sharerKey) this.requireOutranks(this.subject(me.key), sharerKey);
+        }
+        await this.dropSubs([sub.id]);
+        return;
+      }
+
       case "react":
         this.require(me, "chat.react");
         this.requireUnmuted(me);
@@ -431,6 +464,7 @@ export class ScreenDO extends DurableObject<Env> {
         s.playlist = P.remove(before, msg.data.id);
         await this.save();
         this.broadcast({ type: "playlist", data: s.playlist });
+        await this.dropSubs(s.subs.filter((x) => x.itemId === msg.data.id).map((x) => x.id));
         if (s.item?.id === msg.data.id) return this.setCurrent(P.successorAfterRemoval(before, msg.data.id), s.anchor.state === "playing");
         return;
       }
@@ -719,6 +753,53 @@ export class ScreenDO extends DurableObject<Env> {
     const key = Object.keys(this.state!.members).find((k) => k.startsWith(viewerId));
     if (!key) throw new ProtocolError("not_found", "no such viewer");
     return key;
+  }
+
+  // ---- Shared subtitles (§17)
+
+  /** POST: upload (needs subtitles.share). GET <id>: download (members only). Token in "Authorization: Bearer". */
+  private async subsRequest(request: Request, id: string | undefined): Promise<Response> {
+    const s = this.state!;
+    const token = S.bearer(request);
+    if (!token) throw new ProtocolError("forbidden", "missing token");
+    const key = await sha256Hex(token);
+    if (!s.members[key] || s.bans.includes(key)) throw new ProtocolError("forbidden", "join the screen first");
+
+    if (request.method === "GET" && id) {
+      const meta = s.subs.find((x) => x.id === id);
+      const body = meta ? await this.ctx.storage.get<ArrayBuffer>(S.storageKey(id)) : undefined;
+      if (!meta || !body) throw new ProtocolError("not_found", "no such subtitles");
+      return new Response(body, { headers: { "Content-Type": "application/gzip", "Cache-Control": "private, max-age=86400" } });
+    }
+    if (request.method !== "POST" || id) throw new ProtocolError("bad_request", "unsupported request");
+
+    if (!R.can(this.subject(key), "subtitles.share", s.roles)) throw new ProtocolError("forbidden", "you don't have permission: subtitles.share");
+    const { itemId, name, format } = S.parseUpload(new URL(request.url));
+    const item = s.playlist.find((it) => it.id === itemId);
+    if (!item) throw new ProtocolError("not_found", "no such item");
+    S.checkRoom(s.subs, itemId);
+    const declared = Number(request.headers.get("Content-Length") ?? "0");
+    if (declared > S.MAX_SUB_BYTES) S.checkBody(new ArrayBuffer(S.MAX_SUB_BYTES + 1));
+    const body = await request.arrayBuffer();
+    S.checkBody(body);
+
+    const member = s.members[key]!;
+    const meta: S.SubMeta = { id: `s${++s.subSeq}`, itemId, name, format, size: body.byteLength, from: key.slice(0, 12), fromName: member.name };
+    await this.ctx.storage.put(S.storageKey(meta.id), body);
+    s.subs = [...s.subs, meta];
+    await this.save();
+    this.broadcast({ type: "subs", data: s.subs });
+    await this.system(`${member.name} shared subtitles: ${name} (for ${item.name})`);
+    return Response.json(meta, { status: 201 });
+  }
+
+  private async dropSubs(ids: string[]): Promise<void> {
+    const s = this.state!;
+    if (ids.length === 0) return;
+    s.subs = s.subs.filter((x) => !ids.includes(x.id));
+    await this.ctx.storage.delete(ids.map(S.storageKey));
+    await this.save();
+    this.broadcast({ type: "subs", data: s.subs });
   }
 
   // ---- Chat helpers
@@ -1020,6 +1101,8 @@ function normalise(s: ScreenState & { known?: Record<string, { name: string; dev
   s.playlist ??= s.item ? [s.item] : [];
   s.autoAdvance ??= true;
   s.actingHost ??= null;
+  s.subs ??= [];
+  s.subSeq ??= 0;
   s.failedPasswords ??= {};
   return s;
 }

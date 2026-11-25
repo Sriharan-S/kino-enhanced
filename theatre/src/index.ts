@@ -8,7 +8,7 @@ export { ScreenDO } from "./screen";
 const CORS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
 
 const json = (body: unknown, status = 200) =>
@@ -61,6 +61,16 @@ export default {
           visibility: l.visibility,
           requiresPassword: l.visibility === "private",
         });
+      }
+
+      // POST /screens/<code>/subs, GET /screens/<code>/subs/<id>  (shared subtitles; token in Authorization)
+      if (parts[0] === "screens" && parts[1] && parts[2] === "subs" && parts.length <= 4) {
+        const found = await lobby(env).resolve(normaliseCode(parts[1]));
+        if (!found) return error(404, "not_found", "no screen with that code on this theatre");
+        const res = await env.SCREEN.get(env.SCREEN.idFromString(found.screenId)).fetch(request);
+        const headers = new Headers(res.headers);
+        for (const [k, v] of Object.entries(CORS)) headers.set(k, v);
+        return new Response(res.body, { status: res.status, headers });
       }
 
       // GET /screens/<code>/ws  (WebSocket upgrade)

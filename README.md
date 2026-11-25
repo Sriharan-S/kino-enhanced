@@ -246,14 +246,14 @@ Tasks are worked through in order and checked off as they are completed. Windows
 
 | #     | Task                             | Details                                                                                 | Status |
 | ----- | -------------------------------- | --------------------------------------------------------------------------------------- | ------ |
-| 15.1  | Load subtitles                   | For local and URL items (not YouTube)                                                   | ⬜     |
-| 15.2  | Subtitle formats                 | SRT, VTT, ASS/SSA, embedded tracks                                                      | ⬜     |
-| 15.3  | Per-video scope                  | Belong to an item, not the playlist                                                     | ⬜     |
-| 15.4  | "Also share with viewers" toggle | Needs `subtitles.share`                                                                 | ⬜     |
-| 15.5  | Viewer choice                    | Shared / own / embedded / off                                                           | ⬜     |
-| 15.6  | Subtitle transfer                | Compressed, 1 MB max, stored for the screen's lifetime                                  | ⬜     |
-| 15.7  | Subtitle timing offset           | Per-viewer ±ms (local)                                                                  | ⬜     |
-| 15.8  | Subtitle styling                 | Font, size, colours, outline, background, position (local)                              | ⬜     |
+| 15.1  | Load subtitles                   | Subtitles flyout → Load a file…; libmpv also picks up a same-named file next to the video | ✅     |
+| 15.2  | Subtitle formats                 | SRT, VTT, ASS/SSA files; embedded tracks listed as "In the file"                        | ✅     |
+| 15.3  | Per-video scope                  | Shared files belong to one playlist item and are deleted with it                        | ✅     |
+| 15.4  | "Also share with viewers" toggle | "Also share with viewers" (needs `subtitles.share`); chat announces it                  | ✅     |
+| 15.5  | Viewer choice                    | Per item: off, in the file, shared by anyone, or your own file                          | ✅     |
+| 15.6  | Subtitle transfer                | gzip over HTTP with the per-screen token; 1 MB max; 20 per item, 100 per screen         | ✅     |
+| 15.7  | Subtitle timing offset           | Per file, ±10 s                                                                         | ✅     |
+| 15.8  | Subtitle styling                 | Font, size, colour, outline, background box and opacity, position                       | ✅     |
 
 ### 16. Chat
 

@@ -3,6 +3,7 @@
 import type { ChatMessage, Gif, Reaction } from "./chat";
 import { cleanText, isAllowedGifUrl, isReaction } from "./chat";
 import { isPermission, type Permission, type Role } from "./rbac";
+import type { SubMeta } from "./subs";
 
 export const PROTOCOL_VERSION = 1;
 export const MIN_CLIENT_PROTOCOL = 1;
@@ -128,7 +129,8 @@ export type ClientMessage =
   | { type: "code.regenerate"; data: Record<string, never> }
   | { type: "chat.send"; data: { text: string } }
   | { type: "chat.gif"; data: Gif }
-  | { type: "react"; data: { emoji: Reaction } };
+  | { type: "react"; data: { emoji: Reaction } }
+  | { type: "subs.unshare"; data: { id: string } };
 
 // ---- Theatre -> client --------------------------------------------------------------
 
@@ -155,6 +157,7 @@ export type ServerMessage =
         coHosts: CoHostInfo[];
         playlist: Item[];
         chat: ChatMessage[];
+        subs: SubMeta[];
         item: Item | null;
         anchor: Anchor;
         serverTime: number;
@@ -170,6 +173,7 @@ export type ServerMessage =
   | { type: "playlist"; data: Item[] }
   | { type: "chat"; data: ChatMessage }
   | { type: "react"; data: { from: string; name: string; emoji: Reaction } }
+  | { type: "subs"; data: SubMeta[] }
   | { type: "error"; data: { code: ErrorCode; message: string } };
 
 // ---- Validation ----------------------------------------------------------------------
@@ -319,6 +323,9 @@ export function parseClientMessage(raw: string | ArrayBuffer): ClientMessage {
         },
       };
     }
+    case "subs.unshare":
+      if (typeof d.id !== "string" || !/^s[0-9]{1,9}$/.test(d.id)) throw new ProtocolError("bad_request", "id must be a subtitle id");
+      return { type: "subs.unshare", data: { id: d.id } };
     case "react":
       if (!isReaction(d.emoji)) throw new ProtocolError("bad_request", "unsupported reaction");
       return { type: "react", data: { emoji: d.emoji } };

@@ -31,6 +31,11 @@ All responses are JSON with CORS `*`. Errors look like `{ "error": { "code": "..
 | `POST /screens` | Create a screen | `201 { theatre, code, screenId, claim }` |
 | `GET /resolve/<code>` | Look up a code (join by code or link) | `{ code, screenId, name, visibility, requiresPassword }`, or `404` |
 | `GET /screens/<code>/ws` | WebSocket upgrade into the screen | `101` |
+| `POST /screens/<code>/subs?item=&format=&name=` | Share a subtitle file for an item. Body: the file, **gzip-compressed**, at most 1 MB. `Authorization: Bearer <perScreenToken>`; needs `subtitles.share`. | `201 SubMeta` |
+| `GET /screens/<code>/subs/<id>` | Download a shared subtitle file (gzip). Members only (`Authorization: Bearer <perScreenToken>`). | `200` gzip body |
+
+Subtitles go over HTTP because WebSocket messages on Workers are capped at 1 MiB. `format` is `srt`, `vtt`, `ass` or `ssa`.
+There are at most 20 files per item and 100 per screen. Files are deleted with their item.
 
 `POST /screens` body: `{ name, visibility: "public"|"private", password?, hidden?, maxViewers? }`.
 - `password` is required for private screens.
@@ -86,6 +91,7 @@ Envelope: `{ "type": "<type>", "data": { ... } }`. Messages are limited to 16 Ki
 | `leave` | `{}` | joined | Explicit leave: no reconnect grace. |
 | `chat.send` | `{ text }` | `chat.send`, not muted | 1–500 characters (newlines kept, control characters dropped). 5 messages per 5 s, shared with GIFs. |
 | `chat.gif` | `{ url, width?, height?, title? }` | `chat.gif`, not muted | `https` URL from an allow-listed GIF service (GIPHY, Tenor, KLIPY media hosts). The client searches the provider itself. |
+| `subs.unshare` | `{ id }` | the sharer, or `subtitles.share` and ranked above them | Removes a shared subtitle file. |
 | `react` | `{ emoji }` | `chat.react`, not muted | One of 👍 ❤️ 😂 😮 😢 🔥 👏 🎉. Broadcast, never stored. 10 per 5 s. |
 
 **Permissions** are checked by the theatre on every message (wiki docs §8). You can't grant permissions you don't have yourself,
@@ -96,13 +102,14 @@ and you can only act on roles and viewers ranked strictly **below** you: host 10
 
 | Type | Data | When |
 |---|---|---|
-| `welcome` | `{ self, screen, viewers, roles, coHosts, playlist, chat, item, anchor, serverTime }` | Reply to a successful `hello` |
+| `welcome` | `{ self, screen, viewers, roles, coHosts, playlist, chat, subs, item, anchor, serverTime }` | Reply to a successful `hello` |
 | `pong` | `{ t0, ts }` | Reply to `ping`. `ts` is theatre time when it was handled. |
 | `anchor` | `Anchor` | Any timeline change |
 | `item` | `Item \| null` | Current item changed |
 | `playlist` | `Item[]` | Items added, removed or reordered |
 | `chat` | `ChatMessage` | A text, GIF or system message. The last 100 are kept and sent to late joiners in `welcome.chat`. |
 | `react` | `{ from, name, emoji }` | Someone reacted |
+| `subs` | `SubMeta[]` | Subtitles were shared or removed |
 | `viewers` | `ViewerInfo[]` | Anyone joins or leaves, or their RTT, buffering, roles, co-host status or permissions change |
 | `roles` | `Role[]` | Roles were created, edited or deleted |
 | `screen` | `ScreenInfo` | Settings or code changed |
@@ -127,6 +134,7 @@ ViewerInfo = { id: string, name: string, device: Device|null, isHost: boolean, r
 ScreenInfo = { code: string, name: string, visibility: "public"|"private", hidden: boolean, maxViewers: number, showDevices: boolean,
                autoAdvance: boolean }
 NewItem    = { kind: "local"|"url", name: string, duration: number|null, url?: string }   // local: file name only, never a path
+SubMeta    = { id: string, itemId: string, name: string, format: "srt"|"vtt"|"ass"|"ssa", size: number, from: string, fromName: string }
 ChatMessage = { id: number, at: number, kind: "text"|"gif"|"system", from: string|null, name: string|null,
                 text: string|null, gif: { url, width, height, title }|null }
 // System messages: joins, leaves, kicks, bans, co-host and role changes, host transfer, acting host, now playing.
