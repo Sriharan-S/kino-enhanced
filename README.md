@@ -295,7 +295,7 @@ Tasks are worked through in order and checked off as they are completed. Windows
 
 | #     | Task                             | Details                                                                                 | Status |
 | ----- | -------------------------------- | --------------------------------------------------------------------------------------- | ------ |
-| 17.1  | Windows build                    | Portable self-contained zip via `tools/Publish-Portable.ps1` (no installer or admin needed) | ✅     |
+| 17.1  | Windows build                    | Installer (Inno, per user) + portable for x64, x86, ARM64; tagged releases on the Windows repo; update notice | ✅     |
 | 17.2  | `servers.json` on Cloudflare Pages | Static-assets Worker `kino-directory` (Pages now deploys as Workers)                  | ✅     |
 | 17.3  | Linux build                      | AppImage / deb                                                                          | ⏸     |
 | 17.4  | Android build                    | APK                                                                                     | ⏸     |
