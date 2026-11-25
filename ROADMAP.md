@@ -73,7 +73,7 @@ needs `KINO_THEATRE`), **Web e2e** (`scripts/e2e.mjs`, two headless browsers).
    commit per repo). For common tasks this file is the authority; the platform file adds where the code lives.
 3. When the behaviour changes, change the spec first (wiki), then the acceptance criteria here, then the code.
 4. Keep the README's `## Roadmap` milestone table in step with the phase summary below.
-5. Update "Status at a glance" (below) by recounting the tables whenever statuses change.
+5. Update "Status at a glance" (below) whenever statuses change: run `node tools/roadmap-counts.mjs` (CI checks it).
 6. Record each full audit in Appendix C with the date and the commit of every repo.
 
 ### Order of work
@@ -121,18 +121,18 @@ Counts every row in the phase tables (sub-tasks included); "—" rows are left o
 | 0 | ✅ 9 · ⬜ 1 | ✅ 7 | ✅ 5 · 🟨 1 · ⬜ 1 | ⏸ 7 | ⏸ 7 |
 | 1 | ✅ 11 · 🟨 1 · ⬜ 2 | — | — | — | — |
 | 2 | ✅ 4 · ⬜ 1 | ✅ 2 · 🟨 1 | ✅ 2 · ⬜ 1 | ⏸ 3 | ⏸ 3 |
-| 3 | ✅ 6 · ⬜ 1 | ✅ 6 · 🟨 3 | ✅ 7 · 🟨 2 | ⏸ 9 | ⏸ 9 |
-| 4 | ✅ 4 · ⬜ 1 | ✅ 9 · 🟨 3 · ⬜ 1 | ✅ 7 · 🟨 5 · ⬜ 1 | ⏸ 13 | ⏸ 13 |
+| 3 | ✅ 6 · ⬜ 1 | ✅ 6 · 🟨 3 | ✅ 8 · 🟨 1 | ⏸ 9 | ⏸ 9 |
+| 4 | ✅ 4 · ⬜ 1 | ✅ 9 · 🟨 3 · ⬜ 1 | ✅ 8 · 🟨 4 · ⬜ 1 | ⏸ 13 | ⏸ 13 |
 | 5 | ✅ 22 · 🟨 3 | ✅ 19 · 🟨 3 | ✅ 13 · 🟨 2 · ⬜ 7 | ⏸ 22 | ⏸ 22 |
 | 6 | ✅ 7 · ⬜ 1 | ✅ 6 · 🟨 2 · ⬜ 1 | ✅ 5 · 🟨 3 · ⬜ 1 | ⏸ 9 | ⏸ 9 |
 | 7 | ✅ 8 | ✅ 6 | 🟨 1 · ⬜ 5 | ⏸ 6 | ⏸ 6 |
 | 8 | ✅ 12 | ✅ 11 · 🟨 2 | ✅ 3 · 🟨 1 · ⬜ 9 | ⏸ 13 | ⏸ 13 |
 | 9 | ✅ 4 | ✅ 5 | ✅ 1 · ⬜ 4 | ⏸ 5 | ⏸ 5 |
 | 10 | ✅ 6 | ✅ 10 · 🟨 1 | ✅ 8 · 🟨 2 · ⬜ 1 | ⏸ 11 | ⏸ 11 |
-| 11 | ✅ 14 · ⬜ 1 | ✅ 25 · 🟨 1 · ⬜ 2 | ✅ 19 · 🟨 2 · ⬜ 7 | ⏸ 28 | ⏸ 28 |
-| 12 | — | ✅ 4 · 🟨 4 · ⬜ 2 | ✅ 5 · 🟨 1 · ⬜ 5 | ⏸ 11 | ⏸ 10 |
+| 11 | ✅ 14 · ⬜ 1 | ✅ 25 · 🟨 1 · ⬜ 2 | ✅ 19 · 🟨 3 · ⬜ 6 | ⏸ 28 | ⏸ 28 |
+| 12 | — | ✅ 4 · 🟨 4 · ⬜ 2 | ✅ 5 · 🟨 2 · ⬜ 4 | ⏸ 11 | ⏸ 10 |
 | 13 | ✅ 7 | ✅ 19 · 🟨 2 · ⬜ 1 | ✅ 15 · 🟨 4 · ⬜ 3 | ⏸ 22 | ⏸ 22 |
-| 14 | ✅ 4 · ⬜ 1 | ✅ 8 · ⬜ 1 | ✅ 2 · 🟨 1 · ⬜ 6 | ⏸ 9 | ⏸ 9 |
+| 14 | ✅ 4 · ⬜ 1 | ✅ 8 · ⬜ 1 | ✅ 2 · 🟨 2 · ⬜ 5 | ⏸ 9 | ⏸ 9 |
 | 15 | — | ✅ 1 · 🟨 1 | 🟨 1 · ⬜ 3 | ⏸ 2 | ⏸ 2 |
 | 16 | ✅ 1 | ✅ 7 | ✅ 2 · ⬜ 5 | ⏸ 7 | ⏸ 7 |
 | 17 | ✅ 6 | ✅ 8 · 🟨 3 · ⬜ 1 | 🟨 2 · ⬜ 9 | ⏸ 12 | ⏸ 12 |
@@ -142,7 +142,7 @@ Counts every row in the phase tables (sub-tasks included); "—" rows are left o
 | 21 | ✅ 1 · ⬜ 13 | ✅ 1 · 🟨 1 · ⬜ 14 | ✅ 3 · 🟨 1 · ⬜ 13 | ⏸ 14 | ⏸ 14 |
 | 22 | ⏸ 4 | ⏸ 3 | ⏸ 3 | ⏸ 3 | ⏸ 3 |
 | 23 | ⬜ 23 | ⬜ 26 | ⬜ 28 | ⬜ 27 | ⬜ 26 |
-| **All** | **✅ 137 · 🟨 4 · ⬜ 45 · ⏸ 4** | **✅ 169 · 🟨 34 · ⬜ 49 · ⏸ 3** | **✅ 106 · 🟨 33 · ⬜ 117 · ⏸ 3** | **⬜ 27 · ⏸ 228** | **⬜ 26 · ⏸ 227** |
+| **All** | **✅ 137 · 🟨 4 · ⬜ 45 · ⏸ 4** | **✅ 169 · 🟨 34 · ⬜ 49 · ⏸ 3** | **✅ 108 · 🟨 34 · ⬜ 114 · ⏸ 3** | **⬜ 27 · ⏸ 228** | **⬜ 26 · ⏸ 227** |
 
 ---
 
@@ -435,7 +435,7 @@ Acceptance criteria:
 | C-3.4 | Per-screen token | §5, R3.3 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Win unit (matches the theatre's HMAC); Web live (joins) |
 | C-3.5 | Reconnect restores everything | §5, R3.4 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Th smoke; Win live; Web live (member rejoins without password) |
 | C-3.6 | Host ownership by owner token (one-time claim) | §5, §19.1, R3.5 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Th smoke |
-| C-3.7 | Automatic reconnect after a network drop | §6.4, R2.6 | ✅ | 🟨 | 🟨 | ⏸ | ⏸ | Both: 3 clock samples after a reconnect instead of the 8-sample burst (§14.3). Win: gives up onto the video page, not the lobby (C-19.3). Web: no automated test of the reconnect loop |
+| C-3.7 | Automatic reconnect after a network drop | §6.4, R2.6 | ✅ | 🟨 | ✅ | ⏸ | ⏸ | Win: 3 clock samples after a reconnect instead of the 8-sample burst (§14.3); gives up onto the video page, not the lobby (C-19.3). Web: full 8-sample burst; live test drops the connection and checks seat, sync and anchors after the reconnect |
 | C-3.8 | One live session per viewer | §6.4 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Th: older socket closed with 4000 |
 | C-3.9 | Profiles: separate identities on one device | §21.1 | — | ✅ | ✅ | ⏸ | ⏸ | Win `--profile`; Web `?profile=` |
 
@@ -505,15 +505,15 @@ can join the same screen as different viewers (for testing).
 |---|---|---|---|---|---|---|---|---|
 | C-4.1 | Theatre list: live, then cached, then bundled | §4.2, R1.4 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Win unit (5 tests); Web unit (directory parsing) |
 | C-4.2 | Parallel `/info` probes and theatre latency | §10.4, R7.4 | — | ✅ | 🟨 | ⏸ | ⏸ | Win unit. Web: no automated test of probing or of choosing the fastest |
-| C-4.3 | Incompatible theatres are unusable, and say why | §19.2 | — | 🟨 | 🟨 | ⏸ | ⏸ | Both treat them as unusable, but show no "needs a newer Kino" hint |
-| C-4.4 | Unavailable theatres greyed out and not usable for create | §4.4, R1.10 | — | 🟨 | 🟨 | ⏸ | ⏸ | Both still let you pick an unavailable theatre in Create; Win's lobby badge ignores `/info` health |
+| C-4.3 | Incompatible theatres are unusable, and say why | §19.2 | — | 🟨 | 🟨 | ⏸ | ⏸ | Win: no "needs a newer Kino" hint. Web: lobby strip and Create say "needs a newer version of Kino (reload the page)" (unit-tested `probeProblem`); UI not yet checked by hand |
+| C-4.4 | Unavailable theatres greyed out and not usable for create | §4.4, R1.10 | — | 🟨 | 🟨 | ⏸ | ⏸ | Win: still lets you pick an unavailable theatre in Create; lobby badge ignores `/info` health. Web: unusable theatres are disabled in Create with the reason, and Create is blocked with "No theatre is available right now" when none is usable; UI not yet checked by hand |
 | C-4.5 | Create suggests the fastest usable theatre | §4.4 | — | ✅ | ✅ | ⏸ | ⏸ | Win unit; Web: UI manual |
 | C-4.6 | Unified lobby across theatres | §10.1, R7.1, R7.2 | — | ✅ | ✅ | ⏸ | ⏸ | Win unit; Web unit (`mergeLobbies`) |
 | C-4.7 | Listing fields | §10.2, R7.3, R7.4 | ✅ | ✅ | ✅ | ⏸ | ⏸ | UI: manual |
 | C-4.8 | "Now playing" in the listing (host setting) | §10.2 | ⬜ | ⬜ | ⬜ | ⏸ | ⏸ | Not in the protocol yet |
 | C-4.9 | Visibility matrix | §10.3, R7.5–R7.7 | ✅ | — | — | — | — | Th smoke (hidden screens not listed) |
 | C-4.10 | Refresh and ping cadence | §10.4, R7.8 | — | 🟨 | 🟨 | ⏸ | ⏸ | Win: no ping when the lobby opens. Web: manual refresh doesn't re-ping |
-| C-4.11 | Partial results with a 3 s per-theatre timeout | §10.4, R7.9 | — | ✅ | 🟨 | ⏸ | ⏸ | Win unit. Web uses 5 s for `/info` and `/lobby` |
+| C-4.11 | Partial results with a 3 s per-theatre timeout | §10.4, R7.9 | — | ✅ | ✅ | ⏸ | ⏸ | Win unit. Web: 3 s for `/info`, `/lobby` and `/resolve` (`THEATRE_TIMEOUT_MS`) |
 | C-4.12 | Sort, filter and search | §10.4, R7.10 | — | ✅ | ✅ | ⏸ | ⏸ | Win unit (4 tests); Web unit |
 | C-4.13 | Loading and empty states | §10 | — | ✅ | ✅ | ⏸ | ⏸ | UI: manual |
 | C-4.14 | Full screens shown as full and not joinable | §6.4 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Win, Web unit (full screens sort last) |
@@ -1083,7 +1083,7 @@ same tests.
 | C-11.20 | Personal sync offset | §14.15, R11.15 | — | ✅ | 🟨 | ⏸ | ⏸ | Win unit. Web: the engine supports it (unit test), no control |
 | C-11.21 | Sync readout for the viewer | §14 | — | ✅ | ✅ | ⏸ | ⏸ | Zone, drift, rate. UI: manual |
 | C-11.22 | Shared sync test vectors across engines | §14 | ⬜ | ⬜ | ⬜ | ⏸ | ⏸ | Today the tests are ported by hand |
-| C-11.23 | Sleep, lock and background behaviour | §14.11 | — | 🟨 | ⬜ | ⏸ | ⏸ | Win: recovers through reconnect; not tested. Web: background-tab timer throttling not handled |
+| C-11.23 | Sleep, lock and background behaviour | §14.11 | — | 🟨 | 🟨 | ⏸ | ⏸ | Win: recovers through reconnect; not tested. Web: the engine ticks from a dedicated worker (not throttled in background tabs) and a tick gap over 3 s runs a full clock burst; AC 2 (30 min hidden) not yet verified by hand, AC 3 not automated |
 
 #### C-11.1 Sync only
 Acceptance criteria: only playback state, times and small metadata (names, durations, links, chat, subtitle files the
@@ -1227,7 +1227,7 @@ Acceptance criteria:
 | C-12.7 | Keyboard shortcuts | §15.4, R10.6 | — | 🟨 | 🟨 | ⏸ | ⏸ | Win: a focused slider takes the arrow keys, nothing works while the YouTube view has focus, and seeking reads libmpv's position during YouTube items. Web: no ↑/↓, N, P or Home |
 | C-12.8 | Touch gestures | §15.4 | — | — | ⬜ | ⏸ | — | Web: phones and tablets |
 | C-12.9 | Buffering and end-of-file detection | §15.2, §15.3 | — | 🟨 | ✅ | ⏸ | ⏸ | Win: only `paused-for-cache` (spec also lists `core-idle` and `seeking`) |
-| C-12.10 | System media controls go through the screen | — | — | ⬜ | ⬜ | ⏸ | ⏸ | Web: media keys act on `<video>` directly and fight the engine |
+| C-12.10 | System media controls go through the screen | — | — | ⬜ | 🟨 | ⏸ | ⏸ | Web: Media Session handlers route play, pause, next, previous and seeks through the screen with permissions; browser test checks the metadata; media keys not yet tried by hand |
 | C-12.11 | Keep the display awake while playing | — | — | 🟨 | ⬜ | ⏸ | ⏸ | Win: relies on libmpv's default `stop-screensaver`; not verified |
 
 #### C-12.1 Playback engine integration
@@ -1417,7 +1417,7 @@ a file opened before creating a screen becomes its first item.
 | C-14.5 | YouTube player | §13.6, R12.11 | ✅ | ✅ | ⬜ | ⏸ | ⏸ | Th: `/yt` page. Win: WebView2. Web: shows "Use Kino for Windows" |
 | C-14.6 | YouTube sync rules | §14.13, R12.12 | — | ✅ | 🟨 | ⏸ | ⏸ | Win unit. Web: the settings exist in `sync.ts` but aren't used |
 | C-14.7 | Ads and YouTube buffering count as buffering | §14.13 | — | ✅ | ⬜ | ⏸ | ⏸ | |
-| C-14.8 | End of a YouTube item: wait for everyone, host can skip | §14.13 | ✅ | ✅ | ⬜ | ⏸ | ⏸ | Th smoke. **Web viewers never send `item.ended`, so a screen with a web viewer never leaves a YouTube item by itself** |
+| C-14.8 | End of a YouTube item: wait for everyone, host can skip | §14.13 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th smoke. Web: can't play YouTube yet (C-14.5), so it sends `item.ended` at once and tells the viewer; it never blocks the screen (live test, and the browser test moves past a YouTube item). ✅ once the web plays YouTube and sends `item.ended` at the real end |
 | C-14.9 | YouTube titles | §13.6 | — | ✅ | ⬜ | ⏸ | ⏸ | Win: oEmbed. Web: names items "YouTube {id}" |
 | C-14.10 | YouTube errors explained | §15.5 | — | ✅ | ⬜ | ⏸ | ⏸ | Embedding disabled, private, removed |
 

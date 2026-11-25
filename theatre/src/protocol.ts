@@ -474,6 +474,15 @@ export function parseClientMessage(raw: string | ArrayBuffer): ClientMessage {
   }
 }
 
+/**
+ * The code to answer a client's close with. 1005 (no code) and 1006 (abnormal) are reserved and can't be sent: echoing
+ * them throws, and the client then waits for its closing-handshake timeout (about 10 s) before it notices.
+ */
+export function echoCloseCode(code: number): number {
+  const sendable = code === 1000 || (code >= 1001 && code <= 1003) || (code >= 1007 && code <= 1014) || (code >= 3000 && code <= 4999);
+  return sendable ? code : 1000;
+}
+
 export function encode(msg: ServerMessage): string {
   return JSON.stringify(msg);
 }

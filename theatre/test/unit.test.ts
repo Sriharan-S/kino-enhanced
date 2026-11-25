@@ -124,3 +124,15 @@ describe("YouTube links", () => {
     expect(youtubeUrl("https://www.youtube.com/watch?v=short")).toBeNull();
   });
 });
+
+import { echoCloseCode } from "../src/protocol";
+
+describe("closing handshake", () => {
+  it("echoes sendable close codes and replaces reserved ones with 1000", () => {
+    expect(echoCloseCode(1000)).toBe(1000);
+    expect(echoCloseCode(4001)).toBe(4001);
+    expect(echoCloseCode(1005)).toBe(1000); // client closed without a code
+    expect(echoCloseCode(1006)).toBe(1000);
+    expect(echoCloseCode(1015)).toBe(1000);
+  });
+});

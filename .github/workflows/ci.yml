@@ -57,3 +57,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: for f in protocol/examples/*/*.json; do node -e "JSON.parse(require('fs').readFileSync('$f','utf8'))" || exit 1; done
+
+  roadmap:
+    name: Roadmap status counts are up to date
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: node tools/roadmap-counts.mjs --check

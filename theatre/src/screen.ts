@@ -12,6 +12,7 @@ import {
   type Anchor,
   type ClientMessage,
   type Device,
+  echoCloseCode,
   type ErrorCode,
   type Item,
   type NewItem,
@@ -239,7 +240,7 @@ export class ScreenDO extends DurableObject<Env> {
 
   override async webSocketClose(ws: WebSocket, code: number, reason: string): Promise<void> {
     try {
-      ws.close(code, reason);
+      ws.close(echoCloseCode(code), reason);
     } catch {
       /* already closed */
     }
