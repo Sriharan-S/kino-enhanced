@@ -1,6 +1,7 @@
 {
   "version": 1,
   "theatres": [
-    { "id": "aurora", "name": "Aurora", "url": "https://kino-aurora.srie.workers.dev" }
+    { "id": "aurora", "name": "Aurora", "url": "https://kino-aurora.srie.workers.dev" },
+    { "id": "nova", "name": "Nova", "url": "https://kino-nova.sri-me.workers.dev" }
   ]
 }

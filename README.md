@@ -60,7 +60,7 @@ Tasks are worked through in order and checked off as they are completed. Windows
 | #     | Task                              | Details                                                                                 | Status |
 | ----- | --------------------------------- | --------------------------------------------------------------------------------------- | ------ |
 | 1.1   | Worker project scaffold           | TypeScript Worker in `theatre/`; runs locally with `wrangler dev`                       | ✅     |
-| 1.2   | Multi-account deployment          | `npm run deploy -- <id> <Name>` per account; Aurora live; more accounts pending         | 🟨    |
+| 1.2   | Multi-account deployment          | Aurora and Nova live on separate free accounts; `accounts/<id>.env` per extra account   | ✅     |
 | 1.3   | Unique theatre naming             | Sky & stars names; id/name set per deployment; Aurora is the first                      | ✅     |
 | 1.4   | Dynamic theatre list              | Live `servers.json`, then cached copy, then bundled list (Windows)                      | ✅     |
 | 1.5   | `/info` endpoint                  | Name, protocol version, status; also used as the latency probe                          | ✅     |

@@ -31,6 +31,7 @@ Each Cloudflare account hosts one theatre, which spreads the free-tier limits. T
 ```bash
 npx wrangler login                    # once per Cloudflare account
 npm run deploy -- aurora Aurora       # deploys Worker kino-aurora with THEATRE_ID/THEATRE_NAME set
+npm run deploy -- nova Nova           # uses accounts/nova.env (that account's API token), see accounts/README.md
 npm run smoke -- https://kino-aurora.<account>.workers.dev
 ```
 
@@ -41,3 +42,4 @@ Then add the theatre to [`../directory/public/servers.json`](../directory) and r
 | Theatre | URL |
 |---|---|
 | Aurora | https://kino-aurora.srie.workers.dev |
+| Nova | https://kino-nova.sri-me.workers.dev (own account, `accounts/nova.env`) |
