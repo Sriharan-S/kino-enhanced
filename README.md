@@ -85,7 +85,7 @@ Tasks are worked through in order and checked off as they are completed. Windows
 | 2.7   | Viewer list                       | Side panel: Host / Acting host / Co-host #n / roles, device, ping, mute icon; away co-hosts listed | ✅     |
 | 2.8   | Host controls the screen          | The host has full control by default                                                    | ✅     |
 | 2.9   | Viewer cap                        | 2–25 (default 10), chosen when creating; enforced by the theatre                        | ✅     |
-| 2.10  | Screen settings                   | Name, visibility, password, hide, max viewers, devices, auto-advance done; buffering policy pending | 🟨    |
+| 2.10  | Screen settings                   | Name, visibility, password, hide, max viewers, devices, auto-advance, buffering policy              | ✅     |
 | 2.11  | Screen lifecycle                  | Empty screen closes after 5 min; host + co-hosts absent 15 min closes it; host can close it | ✅     |
 
 ### 3. Identity & Reconnect (no accounts)
@@ -165,7 +165,7 @@ Tasks are worked through in order and checked off as they are completed. Windows
 | 9.3   | Per-screen devices toggle         | Screen setting, on by default; when off the theatre sends no devices                    | ✅     |
 | 9.4   | Own latency indicator             | Sync overlay shows your RTT to the theatre                                              | ✅     |
 | 9.5   | Others' latency indicator         | Viewers panel shows each RTT, updated after every clock re-sync                         | ✅     |
-| 9.6   | Sync status per viewer            | In sync / catching up / buffering / mismatch / waiting                                  | ⬜     |
+| 9.6   | Sync status per viewer            | 🟢 in sync · 🟡 catching up · 🔵 buffering · ⚠ file differs · ⏳ waiting · ⛔ no file; sent on change only | ✅     |
 
 ### 10. Media Player
 
@@ -194,9 +194,9 @@ Tasks are worked through in order and checked off as they are completed. Windows
 | 11.9  | Hard seek fallback                | Above 3 s, with learned seek-latency compensation                                       | ✅     |
 | 11.10 | Host re-anchor                    | Host sends a fresh anchor if its own drift exceeds 0.25 s                               | ✅     |
 | 11.11 | Late join / reconnect catch-up    | Clock burst, snapshot, seek                                                             | ✅     |
-| 11.12 | Buffering policy                  | Keep playing (default) / Wait for everyone, with host override                          | ⬜     |
+| 11.12 | Buffering policy                  | Wait for everyone: theatre pauses for viewers buffering > 2 s and resumes with a scheduled start; Resume anyway | ✅     |
 | 11.13 | Playlist transitions              | Theatre ends items on its alarm (host's duration); shorter copies wait, longer ones move on | ✅     |
-| 11.14 | Ready check                       | Prompt, live tally, 30 s timeout                                                        | ⬜     |
+| 11.14 | Ready check                       | Prompt over the video, live tally, 30 s timeout on the theatre's alarm, result in chat  | ✅     |
 | 11.15 | Personal sync offset              | Picture & sound → Personal sync offset, ±2000 ms, applied in the drift formula          | ✅     |
 
 ### 12. Media Selection & Playlists

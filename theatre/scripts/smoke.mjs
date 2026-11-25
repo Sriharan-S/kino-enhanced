@@ -348,6 +348,47 @@ assert.match((await eve.next("error")).message, /muted/);
 frank.close();
 step(`history (${history.length} messages incl. joins, roles, now playing) reaches late joiners; muted viewers can't chat`);
 
+// --- viewer sync status (§12), "wait for everyone" (§14.10), ready check (§14.14)
+const eveId = eveWelcome.self.id;
+host2.send("viewer.mute", { viewer: eveId, muted: false });
+eve.send("status", { value: "catching" });
+await host2.next("viewers", (l) => me(l, eveId)?.status === "catching");
+
+host2.send("settings.update", { bufferingPolicy: "wait" });
+await eve.next("screen", (sc) => sc.bufferingPolicy === "wait");
+host2.send("playlist.play", { id: B.id }); // a long item, so it does not end during the test
+const playingSeq = (await eve.next("anchor", (a) => a.state === "playing" && a.itemId === B.id)).seq;
+eve.send("status", { value: "buffering" });
+assert.deepEqual(await host2.next("hold", (h) => h !== null), ["Eve"]);
+const heldSeq = (await host2.next("anchor", (a) => a.state === "paused" && a.seq > playingSeq)).seq;
+eve.send("status", { value: "sync" });
+await host2.next("hold", (h) => h === null);
+const resumed = await host2.next("anchor", (a) => a.state === "playing" && a.seq > heldSeq);
+assert.ok(resumed.at > Date.now() - 2000, "resumes with a scheduled start");
+step("wait for everyone: a buffering viewer pauses the screen; it resumes when they're ready");
+
+eve.send("status", { value: "buffering" });
+await host2.next("hold", (h) => h !== null);
+host2.send("hold.release");
+await host2.next("hold", (h) => h === null);
+await host2.next("anchor", (a) => a.state === "playing" && a.seq > resumed.seq + 1);
+eve.send("status", { value: "buffering" }); // still buffering: no new hold
+await new Promise((r) => setTimeout(r, 400));
+eve.send("status", { value: "sync" });
+host2.send("settings.update", { bufferingPolicy: "keep" });
+step("resume anyway: the host overrides, and that viewer isn't waited for again until they recover");
+
+eve.send("ready.start");
+assert.equal((await eve.next("error")).code, "forbidden");
+host2.send("ready.start");
+const rc = await eve.next("ready", (r) => r && !r.done);
+eve.send("ready.answer", { id: rc.id, ready: true });
+carol.send("ready.answer", { id: rc.id, ready: false });
+const done = await host2.next("ready", (r) => r?.done === true);
+assert.equal(done.answers[eveId], true);
+await eve.next("chat", (m) => m.kind === "system" && /Ready check: 2 of 3 ready/.test(m.text));
+step("ready check: everyone answers, the result goes to chat (2 of 3 ready)");
+
 // --- shared subtitles (§17): HTTP upload/download with the per-screen token
 const srt = "1\n00:00:01,000 --> 00:00:03,000\nHello, subtitles!\n";
 const subsUrl = (q = "") => `${BASE}/screens/${recoded.code}/subs${q}`;

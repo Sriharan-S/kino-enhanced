@@ -15,8 +15,10 @@ import {
   type ErrorCode,
   type Item,
   type NewItem,
+  type ReadyCheck,
   type ScreenInfo,
   type ServerMessage,
+  type ViewerStatus,
   type ViewerInfo,
   type Visibility,
 } from "./protocol";
@@ -30,6 +32,8 @@ const EMPTY_SCREEN_TTL_MS = 5 * 60_000;
 /** Host and all co-hosts absent this long → the screen closes (§6.5). */
 const HOST_ABSENT_TTL_MS = 15 * 60_000;
 const DEFAULT_RTT_MS = 200;
+/** How long a ready check stays open (§14.14). */
+const READY_CHECK_MS = 30_000;
 /** A dropped viewer keeps their place (and shows as reconnecting) this long (§6.4). */
 const RECONNECT_GRACE_MS = 60_000;
 /** Wrong-password limits (§11): per token, and per screen because tokens are chosen by the client. */
@@ -88,6 +92,13 @@ interface ScreenState {
   /** Shared subtitle files (metadata; contents under "sub:<id>"). */
   subs: S.SubMeta[];
   subSeq: number;
+  bufferingPolicy: "keep" | "wait";
+  /** Names playback is paused for under "wait for everyone", or null. */
+  hold: string[] | null;
+  /** Buffering viewers the host chose not to wait for (until they recover). */
+  holdIgnored: string[];
+  ready: ReadyCheck | null;
+  readySeq: number;
 }
 
 /** Per-connection data, kept on the socket so it survives hibernation. */
@@ -98,6 +109,7 @@ interface Attachment {
   device: Device;
   rtt: number | null;
   buffering: boolean;
+  status?: ViewerStatus;
   /** Recent chat / reaction times, for rate limiting. */
   chatTimes?: number[];
   reactTimes?: number[];
@@ -155,6 +167,11 @@ export class ScreenDO extends DurableObject<Env> {
       actingHost: null,
       subs: [],
       subSeq: 0,
+      bufferingPolicy: "keep",
+      hold: null,
+      holdIgnored: [],
+      ready: null,
+      readySeq: 0,
     };
     await this.save();
     await this.scheduleAlarm();
@@ -236,6 +253,8 @@ export class ScreenDO extends DurableObject<Env> {
     }
     if (expired) this.broadcastViewers();
 
+    if (s.ready && !s.ready.done && now >= s.ready.deadline) await this.finishReady();
+
     // Current item reached its end (host's duration is the reference): next item, or stop at the end.
     const end = P.endsAt(s.anchor, s.item);
     if (end !== null && now >= end - 50) await this.itemEnded();
@@ -260,6 +279,7 @@ export class ScreenDO extends DurableObject<Env> {
     for (const since of Object.values(s.away)) deadlines.push(since + RECONNECT_GRACE_MS);
     const end = P.endsAt(s.anchor, s.item);
     if (end !== null) deadlines.push(end);
+    if (s.ready && !s.ready.done) deadlines.push(s.ready.deadline);
     if (deadlines.length) await this.ctx.storage.setAlarm(Math.min(...deadlines));
     else await this.ctx.storage.deleteAlarm();
   }
@@ -330,6 +350,8 @@ export class ScreenDO extends DurableObject<Env> {
         playlist: s.playlist,
         chat: this.chat.messages,
         subs: s.subs,
+        ready: s.ready,
+        hold: s.hold,
         item: s.item,
         anchor: s.anchor,
         serverTime: Date.now(),
@@ -373,10 +395,42 @@ export class ScreenDO extends DurableObject<Env> {
         return;
 
       case "buffering":
-        me.buffering = msg.data.value;
+      case "status": {
+        const status: ViewerStatus = msg.type === "status" ? msg.data.value : msg.data.value ? "buffering" : "sync";
+        const buffering = status === "buffering";
+        const changed = me.status !== status || me.buffering !== buffering;
+        me.status = status;
+        me.buffering = buffering;
         ws.serializeAttachment(me);
-        this.broadcastViewers();
+        if (!buffering && s.holdIgnored.includes(me.key)) s.holdIgnored = s.holdIgnored.filter((k) => k !== me.key);
+        if (changed) this.broadcastViewers();
+        await this.checkHold();
         return;
+      }
+
+      case "hold.release":
+        // "Resume anyway": stop waiting for whoever is buffering now.
+        this.require(me, "playback.toggle");
+        return this.releaseHold(me.name);
+
+      // ---- Ready check (§14.14)
+
+      case "ready.start": {
+        this.require(me, "screen.ready_check");
+        s.ready = { id: ++s.readySeq, by: me.name, deadline: now + READY_CHECK_MS, answers: { [me.id]: true }, done: false };
+        await this.save();
+        this.broadcast({ type: "ready", data: s.ready });
+        await this.scheduleAlarm();
+        return;
+      }
+
+      case "ready.answer": {
+        const r = s.ready;
+        if (!r || r.done || r.id !== msg.data.id) throw new ProtocolError("bad_request", "that ready check is over");
+        r.answers[me.id] = msg.data.ready;
+        await this.finishReadyIfComplete();
+        return;
+      }
 
       // ---- Chat (§18)
 
@@ -420,10 +474,12 @@ export class ScreenDO extends DurableObject<Env> {
 
       case "play":
         this.require(me, "playback.toggle");
+        if (s.hold) return this.releaseHold(me.name); // pressing play while held = resume anyway
         return this.setAnchor(A.play(s.anchor, now, this.lead()));
 
       case "pause":
         this.require(me, "playback.toggle");
+        if (s.hold) await this.setHold(null); // a deliberate pause: don't auto-resume later
         return this.setAnchor(A.pause(s.anchor, now));
 
       case "seek":
@@ -674,6 +730,7 @@ export class ScreenDO extends DurableObject<Env> {
         if (d.maxViewers !== undefined) s.maxViewers = d.maxViewers;
         if (d.showDevices !== undefined) s.showDevices = d.showDevices;
         if (d.autoAdvance !== undefined) s.autoAdvance = d.autoAdvance;
+        if (d.bufferingPolicy !== undefined) s.bufferingPolicy = d.bufferingPolicy;
         if (d.visibility !== undefined || d.password !== undefined || d.hidden !== undefined) {
           const visibility = d.visibility ?? s.visibility;
           if (visibility === "private") {
@@ -690,6 +747,8 @@ export class ScreenDO extends DurableObject<Env> {
         this.broadcast({ type: "screen", data: this.screenInfo() });
         if (d.showDevices !== undefined) this.broadcastViewers();
         await this.lobby().update(s.code, { name: s.name, visibility: s.visibility, hidden: s.hidden, maxViewers: s.maxViewers });
+        if (d.bufferingPolicy === "keep" && s.hold) await this.releaseHold(null);
+        else await this.checkHold();
         return;
       }
 
@@ -753,6 +812,73 @@ export class ScreenDO extends DurableObject<Env> {
     const key = Object.keys(this.state!.members).find((k) => k.startsWith(viewerId));
     if (!key) throw new ProtocolError("not_found", "no such viewer");
     return key;
+  }
+
+  // ---- Buffering policy (§14.10) and ready check (§14.14)
+
+  /** Under "wait for everyone": pause while someone buffers, resume with a scheduled start when all are ready. */
+  private async checkHold(): Promise<void> {
+    const s = this.state!;
+    if (s.bufferingPolicy !== "wait") return;
+    const waitingFor = this.online()
+      .filter(([, a]) => a.buffering && !s.holdIgnored.includes(a.key))
+      .map(([, a]) => a.name);
+
+    if (!s.hold) {
+      if (waitingFor.length === 0 || s.anchor.state !== "playing") return;
+      await this.setAnchor(A.pause(s.anchor, Date.now()));
+      await this.setHold(waitingFor);
+      await this.system(`Waiting for ${waitingFor.join(", ")}…`);
+      return;
+    }
+    if (waitingFor.length === 0) {
+      await this.setHold(null);
+      await this.setAnchor(A.play(s.anchor, Date.now(), this.lead()));
+      return;
+    }
+    if (waitingFor.join("|") !== s.hold.join("|")) await this.setHold(waitingFor);
+  }
+
+  /** Resume now, and don't wait again for anyone buffering at this moment. */
+  private async releaseHold(by: string | null): Promise<void> {
+    const s = this.state!;
+    s.holdIgnored = [...new Set([...s.holdIgnored, ...this.online().filter(([, a]) => a.buffering).map(([, a]) => a.key)])];
+    const wasHeld = s.hold !== null;
+    await this.setHold(null);
+    if (wasHeld && by) await this.system(`${by} resumed without waiting`);
+    if (s.anchor.state !== "playing") await this.setAnchor(A.play(s.anchor, Date.now(), this.lead()));
+  }
+
+  private async setHold(names: string[] | null): Promise<void> {
+    const s = this.state!;
+    s.hold = names;
+    await this.save();
+    this.broadcast({ type: "hold", data: names });
+  }
+
+  /** Done when everyone connected has answered. */
+  private async finishReadyIfComplete(): Promise<void> {
+    const r = this.state!.ready;
+    if (!r || r.done) return;
+    const ids = this.online().map(([, a]) => a.id);
+    if (ids.every((id) => id in r.answers)) await this.finishReady();
+    else {
+      await this.save();
+      this.broadcast({ type: "ready", data: r });
+    }
+  }
+
+  private async finishReady(): Promise<void> {
+    const s = this.state!;
+    const r = s.ready;
+    if (!r || r.done) return;
+    r.done = true;
+    await this.save();
+    this.broadcast({ type: "ready", data: r });
+    const online = this.online();
+    const ready = online.filter(([, a]) => r.answers[a.id] === true).length;
+    await this.system(ready === online.length ? "Everyone is ready" : `Ready check: ${ready} of ${online.length} ready`);
+    await this.scheduleAlarm();
   }
 
   // ---- Shared subtitles (§17)
@@ -923,6 +1049,7 @@ export class ScreenDO extends DurableObject<Env> {
   private async setCurrent(item: Item | null, play: boolean): Promise<void> {
     const s = this.state!;
     const now = Date.now();
+    if (s.hold) await this.setHold(null);
     s.item = item;
     let a = A.load(s.anchor, item?.id ?? null, now);
     if (play && item) a = A.play(a, now, this.lead());
@@ -969,6 +1096,8 @@ export class ScreenDO extends DurableObject<Env> {
     this.broadcastViewers(ws);
     await this.updatePresence(ws);
     await this.updateLobby(ws);
+    await this.checkHold();
+    await this.finishReadyIfComplete();
   }
 
   /** Joined sockets, optionally excluding one that is closing. */
@@ -1001,6 +1130,7 @@ export class ScreenDO extends DurableObject<Env> {
       deny: subject.member.deny,
       permissions: R.effective(subject, s.roles),
       connected: true,
+      status: a.status ?? (a.buffering ? "buffering" : "sync"),
     };
   }
 
@@ -1029,6 +1159,7 @@ export class ScreenDO extends DurableObject<Env> {
       maxViewers: s.maxViewers,
       showDevices: s.showDevices,
       autoAdvance: s.autoAdvance,
+      bufferingPolicy: s.bufferingPolicy,
     };
   }
 
@@ -1103,6 +1234,11 @@ function normalise(s: ScreenState & { known?: Record<string, { name: string; dev
   s.actingHost ??= null;
   s.subs ??= [];
   s.subSeq ??= 0;
+  s.bufferingPolicy ??= "keep";
+  s.hold ??= null;
+  s.holdIgnored ??= [];
+  s.ready ??= null;
+  s.readySeq ??= 0;
   s.failedPasswords ??= {};
   return s;
 }

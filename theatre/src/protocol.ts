@@ -66,6 +66,21 @@ export interface ViewerInfo {
   permissions: Permission[];
   /** False while the viewer's connection has dropped and they have a reconnect grace period (§6.4). */
   connected: boolean;
+  /** Reported by the viewer's client on change (§12). */
+  status: ViewerStatus;
+}
+
+export type ViewerStatus = "sync" | "catching" | "buffering" | "mismatch" | "waiting" | "nofile";
+export const VIEWER_STATUSES: readonly ViewerStatus[] = ["sync", "catching", "buffering", "mismatch", "waiting", "nofile"];
+export type BufferingPolicy = "keep" | "wait";
+
+/** A ready check (§14.14). Answers are by viewer id. */
+export interface ReadyCheck {
+  id: number;
+  by: string;
+  deadline: number;
+  answers: Record<string, boolean>;
+  done: boolean;
 }
 
 export interface ScreenInfo {
@@ -77,6 +92,8 @@ export interface ScreenInfo {
   showDevices: boolean;
   /** Move to the next playlist item when the current one ends. */
   autoAdvance: boolean;
+  /** "keep" playing while someone buffers, or "wait" for everyone (§14.10). */
+  bufferingPolicy: BufferingPolicy;
 }
 
 /** A playlist item before the theatre assigns its id. Local files share only name and duration (§13.2). */
@@ -124,13 +141,26 @@ export type ClientMessage =
   | { type: "leave"; data: Record<string, never> }
   | {
       type: "settings.update";
-      data: { name?: string; visibility?: Visibility; password?: string; hidden?: boolean; maxViewers?: number; showDevices?: boolean; autoAdvance?: boolean };
+      data: {
+        name?: string;
+        visibility?: Visibility;
+        password?: string;
+        hidden?: boolean;
+        maxViewers?: number;
+        showDevices?: boolean;
+        autoAdvance?: boolean;
+        bufferingPolicy?: BufferingPolicy;
+      };
     }
   | { type: "code.regenerate"; data: Record<string, never> }
   | { type: "chat.send"; data: { text: string } }
   | { type: "chat.gif"; data: Gif }
   | { type: "react"; data: { emoji: Reaction } }
-  | { type: "subs.unshare"; data: { id: string } };
+  | { type: "subs.unshare"; data: { id: string } }
+  | { type: "status"; data: { value: ViewerStatus } }
+  | { type: "hold.release"; data: Record<string, never> }
+  | { type: "ready.start"; data: Record<string, never> }
+  | { type: "ready.answer"; data: { id: number; ready: boolean } };
 
 // ---- Theatre -> client --------------------------------------------------------------
 
@@ -158,6 +188,8 @@ export type ServerMessage =
         playlist: Item[];
         chat: ChatMessage[];
         subs: SubMeta[];
+        ready: ReadyCheck | null;
+        hold: string[] | null;
         item: Item | null;
         anchor: Anchor;
         serverTime: number;
@@ -174,6 +206,8 @@ export type ServerMessage =
   | { type: "chat"; data: ChatMessage }
   | { type: "react"; data: { from: string; name: string; emoji: Reaction } }
   | { type: "subs"; data: SubMeta[] }
+  | { type: "ready"; data: ReadyCheck | null }
+  | { type: "hold"; data: string[] | null }
   | { type: "error"; data: { code: ErrorCode; message: string } };
 
 // ---- Validation ----------------------------------------------------------------------
@@ -323,6 +357,14 @@ export function parseClientMessage(raw: string | ArrayBuffer): ClientMessage {
         },
       };
     }
+    case "status":
+      if (!VIEWER_STATUSES.includes(d.value as ViewerStatus)) throw new ProtocolError("bad_request", "unknown status");
+      return { type: "status", data: { value: d.value as ViewerStatus } };
+    case "hold.release":
+    case "ready.start":
+      return { type: msg.type, data: {} };
+    case "ready.answer":
+      return { type: "ready.answer", data: { id: num(d.id, "id", 0), ready: bool(d.ready, "ready") } };
     case "subs.unshare":
       if (typeof d.id !== "string" || !/^s[0-9]{1,9}$/.test(d.id)) throw new ProtocolError("bad_request", "id must be a subtitle id");
       return { type: "subs.unshare", data: { id: d.id } };
@@ -395,6 +437,10 @@ export function parseClientMessage(raw: string | ArrayBuffer): ClientMessage {
       if (d.maxViewers !== undefined) out.maxViewers = Math.round(num(d.maxViewers, "maxViewers", 2, LIMITS.maxViewersCap));
       if (d.showDevices !== undefined) out.showDevices = bool(d.showDevices, "showDevices");
       if (d.autoAdvance !== undefined) out.autoAdvance = bool(d.autoAdvance, "autoAdvance");
+      if (d.bufferingPolicy !== undefined) {
+        if (d.bufferingPolicy !== "keep" && d.bufferingPolicy !== "wait") throw new ProtocolError("bad_request", "bufferingPolicy must be keep or wait");
+        out.bufferingPolicy = d.bufferingPolicy;
+      }
       return { type: "settings.update", data: out };
     }
     default:

@@ -64,7 +64,11 @@ Envelope: `{ "type": "<type>", "data": { ... } }`. Messages are limited to 16 Ki
 | `hello` | `{ protocol, token, name, device, password?, claim? }` | anyone | **Must be the first message.** `device`: `windows`/`linux`/`android`/`web`. |
 | `ping` | `{ t0 }` | joined | `t0` is in the **client's** monotonic ms clock; it is echoed back. |
 | `rtt` | `{ value }` | joined | Your measured round-trip time in ms, so others can see it. |
-| `buffering` | `{ value }` | joined | Sent only when the state changes. |
+| `buffering` | `{ value }` | joined | Older form of `status` (`true` = `buffering`, `false` = `sync`). |
+| `status` | `{ value: "sync"\|"catching"\|"buffering"\|"mismatch"\|"waiting"\|"nofile" }` | joined | Your sync status (§12), sent only when it changes. Report `buffering` once it has lasted 2 s. |
+| `hold.release` | `{}` | `playback.toggle` | "Resume anyway" while the screen waits for someone. Those buffering now aren't waited for again until they recover. `play` while held does the same. |
+| `ready.start` | `{}` | `screen.ready_check` | Starts a 30 s ready check. The starter counts as ready. |
+| `ready.answer` | `{ id, ready }` | joined | Answer the current ready check. |
 | `play` | `{}` | `playback.toggle` | Scheduled start: `at = now + lead`. |
 | `pause` | `{}` | `playback.toggle` | Position frozen at the theatre's expected position. |
 | `seek` | `{ to }` | `playback.seek` | Keeps play/pause state. |
@@ -86,7 +90,7 @@ Envelope: `{ "type": "<type>", "data": { ... } }`. Messages are limited to 16 Ki
 | `cohosts.set` | `{ viewers }` | host only | Co-hosts in priority order (first = takes over first). |
 | `host.transfer` | `{ viewer }` | host only | New host must be present. The old host becomes co-host #1. |
 | `screen.close` | `{}` | host only | Everyone gets `closed`; the screen is deleted. |
-| `settings.update` | `{ name?, visibility?, password?, hidden?, maxViewers?, showDevices?, autoAdvance? }` | `screen.settings` | Going private needs a password (new, or the existing one). Going public clears password and hidden. Viewers already in keep their place. |
+| `settings.update` | `{ name?, visibility?, password?, hidden?, maxViewers?, showDevices?, autoAdvance?, bufferingPolicy? }` | `screen.settings` | Going private needs a password (new, or the existing one). Going public clears password and hidden. Viewers already in keep their place. |
 | `code.regenerate` | `{}` | `screen.invite` | New code; the old code and links stop working at once. Connected viewers aren't affected. |
 | `leave` | `{}` | joined | Explicit leave: no reconnect grace. |
 | `chat.send` | `{ text }` | `chat.send`, not muted | 1–500 characters (newlines kept, control characters dropped). 5 messages per 5 s, shared with GIFs. |
@@ -102,7 +106,7 @@ and you can only act on roles and viewers ranked strictly **below** you: host 10
 
 | Type | Data | When |
 |---|---|---|
-| `welcome` | `{ self, screen, viewers, roles, coHosts, playlist, chat, subs, item, anchor, serverTime }` | Reply to a successful `hello` |
+| `welcome` | `{ self, screen, viewers, roles, coHosts, playlist, chat, subs, ready, hold, item, anchor, serverTime }` | Reply to a successful `hello` |
 | `pong` | `{ t0, ts }` | Reply to `ping`. `ts` is theatre time when it was handled. |
 | `anchor` | `Anchor` | Any timeline change |
 | `item` | `Item \| null` | Current item changed |
@@ -110,6 +114,8 @@ and you can only act on roles and viewers ranked strictly **below** you: host 10
 | `chat` | `ChatMessage` | A text, GIF or system message. The last 100 are kept and sent to late joiners in `welcome.chat`. |
 | `react` | `{ from, name, emoji }` | Someone reacted |
 | `subs` | `SubMeta[]` | Subtitles were shared or removed |
+| `hold` | `string[] \| null` | Names the screen is waiting for under `bufferingPolicy: "wait"`, or `null` when it isn't waiting |
+| `ready` | `ReadyCheck \| null` | A ready check started, got an answer, or finished (`done`) |
 | `viewers` | `ViewerInfo[]` | Anyone joins or leaves, or their RTT, buffering, roles, co-host status or permissions change |
 | `roles` | `Role[]` | Roles were created, edited or deleted |
 | `screen` | `ScreenInfo` | Settings or code changed |
@@ -129,10 +135,12 @@ ViewerInfo = { id: string, name: string, device: Device|null, isHost: boolean, r
                allow: Permission[],      // per-viewer overrides: deny beats allow beats roles
                deny: Permission[],
                permissions: Permission[], // effective, computed by the theatre
-               connected: boolean         // false while in the 60 s reconnect grace period
+               connected: boolean,        // false while in the 60 s reconnect grace period
+               status: "sync"|"catching"|"buffering"|"mismatch"|"waiting"|"nofile"
              }
+ReadyCheck = { id: number, by: string, deadline: number, answers: { [viewerId]: boolean }, done: boolean }
 ScreenInfo = { code: string, name: string, visibility: "public"|"private", hidden: boolean, maxViewers: number, showDevices: boolean,
-               autoAdvance: boolean }
+               autoAdvance: boolean, bufferingPolicy: "keep"|"wait" }
 NewItem    = { kind: "local"|"url", name: string, duration: number|null, url?: string }   // local: file name only, never a path
 SubMeta    = { id: string, itemId: string, name: string, format: "srt"|"vtt"|"ass"|"ssa", size: number, from: string, fromName: string }
 ChatMessage = { id: number, at: number, kind: "text"|"gif"|"system", from: string|null, name: string|null,
@@ -174,6 +182,9 @@ banned viewers get no grace.
 **End of an item (§14.12):** the theatre knows the current item's duration (the host's file is the reference), so it
 schedules the end itself on its alarm. Playback continues even if the host is away. With `autoAdvance`, the next item starts
 at 0 with a scheduled start. Otherwise, or at the last item, playback pauses exactly at the end.
+
+**Wait for everyone (§14.10):** with `bufferingPolicy: "wait"`, a viewer reporting `buffering` pauses the anchor at
+`E(now)` and the theatre broadcasts `hold`. When nobody is buffering any more, it resumes with a scheduled start.
 
 **Host away (§7.2):** when the host disconnects, the highest-priority co-host who is present becomes acting host
 (`actingHost: true`) and the timeline authority (it re-anchors). When the host reconnects with the same token, it takes back
