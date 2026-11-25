@@ -1,5 +1,6 @@
 // Kino theatre Worker: HTTP routing and WebSocket hand-off to the screen's Durable Object.
-import { normaliseCode, randomToken, screenCode } from "./crypto";
+import { normaliseCode, randomToken, screenCode, sha256Hex } from "./crypto";
+import { CREATE_LIMIT } from "./ratelimit";
 import { cleanName, LIMITS, MIN_CLIENT_PROTOCOL, PROTOCOL_VERSION, ProtocolError, type Visibility } from "./protocol";
 
 export { LobbyDO } from "./lobby";
@@ -33,6 +34,7 @@ export default {
           minProtocol: MIN_CLIENT_PROTOCOL,
           status: "ok",
           time: Date.now(),
+          deployedAt: env.DEPLOYED_AT ?? null,
         });
       }
 
@@ -92,6 +94,13 @@ export default {
 } satisfies ExportedHandler<Env>;
 
 async function createScreen(request: Request, env: Env): Promise<Response> {
+  // At most CREATE_LIMIT screens per address per window. Only a salted hash of the address is stored.
+  const ip = request.headers.get("CF-Connecting-IP") ?? "local";
+  const who = (await sha256Hex(`${env.THEATRE_ID}:${ip}`)).slice(0, 32);
+  if (!(await lobby(env).allowCreate(who, Date.now(), CREATE_LIMIT))) {
+    return error(429, "rate_limited", "too many screens created from here recently; try again in a few minutes");
+  }
+
   let body: Record<string, unknown>;
   try {
     body = (await request.json()) as Record<string, unknown>;

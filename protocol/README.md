@@ -173,6 +173,8 @@ Clients ignore an anchor whose `seq` is lower than the last one they applied.
 
 `rate_limited` on `hello` means too many wrong passwords: 5 per token per minute, 30 per screen per minute.
 
+Other limits: each connection may send bursts of 40 messages, refilling at 8 per second. Excess messages get `rate_limited` and are dropped, and a connection that keeps flooding is closed. `POST /screens` allows 30 screens per address per 10 minutes (`429 rate_limited`); only a salted hash of the address is kept. `GET /info` also returns `deployedAt`, the deployment's timestamp.
+
 ## 5. Typical flows
 
 **Create and host:** `POST /screens`, then open the WebSocket and send `hello{claim}`. The theatre replies `welcome` with `self.isHost = true`. The host then sends `load` and `play`.

@@ -148,6 +148,18 @@ old.send("hello", { protocol: 0, token: token(randomBytes(32), screenId), name: 
 assert.equal((await old.next("error")).code, "update_required");
 step("protocol 0 client gets update_required");
 
+// --- flood protection: a burst far beyond normal use is refused (the connection survives)
+const flood = connect(code);
+await flood.opened;
+flood.send("hello", { protocol: 1, token: token(randomBytes(32), screenId), name: "Flood", device: "web" });
+await flood.next("welcome");
+for (let i = 0; i < 60; i++) flood.send("ping", { t0: i });
+assert.equal((await flood.next("error", (e) => e.code === "rate_limited")).code, "rate_limited");
+await flood.next("pong"); // the connection still works
+flood.send("leave");
+flood.close();
+step("60 messages at once: the excess is refused with rate_limited");
+
 // --- wrong-password rate limit (5 per token per minute)
 const limitedSecret = randomBytes(32);
 let lastCode;

@@ -34,6 +34,18 @@ export class LobbyDO extends DurableObject<Env> {
       host TEXT,
       updated INTEGER NOT NULL
     )`);
+    this.sql.exec("CREATE TABLE IF NOT EXISTS creations (who TEXT NOT NULL, at INTEGER NOT NULL)");
+  }
+
+  /**
+   * Screen-creation limit per address (`who` is a salted hash, never the address itself). Returns false when over the limit.
+   */
+  allowCreate(who: string, now: number, limit: { count: number; windowMs: number }): boolean {
+    this.sql.exec("DELETE FROM creations WHERE at < ?", now - limit.windowMs);
+    const n = Number(this.sql.exec("SELECT COUNT(*) AS n FROM creations WHERE who = ?", who).one().n);
+    if (n >= limit.count) return false;
+    this.sql.exec("INSERT INTO creations VALUES (?, ?)", who, now);
+    return true;
   }
 
   /** Registers a new screen. Returns false if the code is already taken (caller retries with a new code). */

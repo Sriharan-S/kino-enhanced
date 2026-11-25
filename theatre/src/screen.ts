@@ -25,6 +25,7 @@ import {
 import * as C from "./chat";
 import * as P from "./playlist";
 import * as R from "./rbac";
+import * as RL from "./ratelimit";
 import * as S from "./subs";
 
 /** How long an empty screen survives before it is closed (reconnect window). */
@@ -126,6 +127,7 @@ interface ChatState {
 export class ScreenDO extends DurableObject<Env> {
   private state: ScreenState | null = null;
   private chat: ChatState = { seq: 0, messages: [] };
+  private readonly buckets = new WeakMap<WebSocket, RL.Bucket>();
 
   constructor(ctx: DurableObjectState, env: Env) {
     super(ctx, env);
@@ -205,6 +207,14 @@ export class ScreenDO extends DurableObject<Env> {
 
   override async webSocketMessage(ws: WebSocket, raw: string | ArrayBuffer): Promise<void> {
     if (!this.state) return this.reject(ws, "closed", "screen closed", true);
+
+    // Flood protection: drop messages over the budget; close connections that keep going.
+    const now = Date.now();
+    let bucket = this.buckets.get(ws);
+    if (!bucket) this.buckets.set(ws, (bucket = RL.newBucket(now)));
+    const verdict = RL.take(bucket, now);
+    if (verdict === "close") return this.reject(ws, "rate_limited", "too many messages", true);
+    if (verdict === "limited") return this.reject(ws, "rate_limited", "too many messages; slow down");
 
     let msg: ClientMessage;
     try {

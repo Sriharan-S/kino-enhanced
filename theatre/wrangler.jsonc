@@ -9,7 +9,8 @@
 
   "vars": {
     "THEATRE_ID": "local",
-    "THEATRE_NAME": "Local"
+    "THEATRE_NAME": "Local",
+    "DEPLOYED_AT": "dev"
   },
 
   "durable_objects": {

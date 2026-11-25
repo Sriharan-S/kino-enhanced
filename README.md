@@ -52,8 +52,8 @@ Tasks are worked through in order and checked off as they are completed. Windows
 | 0.6  | Windows repo setup            | `kino-enhanced-windows` initialised                                                      | ✅     |
 | 0.7  | Shared protocol specification | Versioned message spec + canonical examples in `protocol/` (contract-tested on both sides) | ✅     |
 | 0.8  | Protocol compatibility policy | `hello.protocol` checked against `minProtocol`; `update_required` on mismatch            | ✅     |
-| 0.9  | Lint, format, test tooling    | Per repo                                                                                 | ⬜     |
-| 0.10 | CI pipeline                   | Build + test on push in every repo                                                       | ⬜     |
+| 0.9  | Lint, format, test tooling    | Theatre: Prettier + tsc + vitest (`npm run check`); Windows: .editorconfig + `dotnet format` | ✅     |
+| 0.10 | CI pipeline                   | GitHub Actions: theatre unit + end-to-end smoke; Windows build, tests, portable zip artifact | ✅     |
 
 ### 1. Theatres (Servers / Cloudflare Workers)
 
@@ -67,9 +67,9 @@ Tasks are worked through in order and checked off as they are completed. Windows
 | 1.6   | Real-time connection layer        | WebSockets to one Durable Object per screen, using the Hibernation API                  | ✅     |
 | 1.7   | Screen state storage              | Durable Object storage (SQLite-backed, free tier)                                       | ✅     |
 | 1.8   | Lobby Durable Object              | Per-theatre listing of discoverable screens                                             | ✅     |
-| 1.9   | Free-tier budget design           | Event-based anchors, rare re-syncs, state-change-only reports                           | ⬜     |
-| 1.10  | Quota handling                    | Theatre marked unavailable when its daily quota is exhausted                            | ⬜     |
-| 1.11  | Abuse protection                  | Rate limiting, payload size limits, input validation                                    | ⬜     |
+| 1.9   | Free-tier budget design           | Event-based anchors, clock re-sync every 2 min, status sent only on change, GIF search off-theatre, hibernation | ✅     |
+| 1.10  | Quota handling                    | A theatre over quota fails `/info` and is shown unavailable; new screens go to the fastest usable one | ✅     |
+| 1.11  | Abuse protection                  | Per-connection budget (40 burst, 8/s), 30 screens per address per 10 min, size limits, full validation | ✅     |
 | 1.12  | User-added theatres (future)      | "Deploy to Cloudflare" plus paste-URL; deferred                                          | ⏸     |
 
 ### 2. Screens (Rooms)
