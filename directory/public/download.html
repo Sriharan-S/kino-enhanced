@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Download Kino</title>
+  <meta name="description" content="Kino: watch videos together, in sync, everyone playing their own copy.">
+  <style>
+    :root { --bg: #f6f6f8; --card: #ffffff; --text: #1b1b1f; --muted: #5e5e6a; --accent: #5b3fa8; --accent-text: #fff; --line: #e2e2e8; --chip: #efeaf9; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #121216; --card: #1c1c22; --text: #ececf1; --muted: #a0a0ad; --accent: #9d84f0; --accent-text: #0d0d12; --line: #2c2c35; --chip: #2a2440; }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; padding: 16px;
+           background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif; }
+    main { width: 100%; max-width: 560px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 28px; }
+    header { display: flex; gap: 14px; align-items: center; margin-bottom: 8px; }
+    header img { width: 56px; height: 56px; }
+    h1 { font-size: 1.5rem; margin: 0; }
+    p { margin: 8px 0; color: var(--muted); }
+    .version { font-size: .9rem; color: var(--muted); }
+    a.button { display: block; text-align: center; margin: 18px 0 8px; padding: 14px; border-radius: 10px; text-decoration: none;
+               background: var(--accent); color: var(--accent-text); font-weight: 650; font-size: 1.05rem; }
+    a.secondary { display: block; text-align: center; padding: 10px; border-radius: 10px; text-decoration: none;
+                  border: 1px solid var(--line); color: var(--text); }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: .95rem; }
+    th, td { text-align: left; padding: 8px 6px; border-top: 1px solid var(--line); }
+    th { color: var(--muted); font-weight: 500; }
+    td a { color: var(--accent); }
+    .chip { display: inline-block; background: var(--chip); border-radius: 999px; padding: 1px 10px; font-size: .85rem; }
+    small { display: block; margin-top: 18px; color: var(--muted); line-height: 1.45; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <img src="kino.png" alt="">
+      <div>
+        <h1>Kino for Windows</h1>
+        <div class="version" id="version">Latest version</div>
+      </div>
+    </header>
+    <p>Watch videos together, in sync. Everyone plays their own copy; Kino keeps play, pause and seek in step.</p>
+
+    <a class="button" id="primary" href="#">Download the installer</a>
+    <a class="secondary" id="portable" href="#">Portable edition (no install)</a>
+    <p style="text-align:center;margin-top:10px"><span class="chip" id="detected">For 64-bit PCs (x64)</span></p>
+
+    <table>
+      <thead><tr><th>Your PC</th><th>Installer</th><th>Portable</th></tr></thead>
+      <tbody>
+        <tr><td>Most PCs (x64)</td><td><a data-file="Kino-Setup-x64.exe">Setup</a></td><td><a data-file="Kino-Portable-x64.zip">Zip</a></td></tr>
+        <tr><td>ARM (Snapdragon)</td><td><a data-file="Kino-Setup-arm64.exe">Setup</a></td><td><a data-file="Kino-Portable-arm64.zip">Zip</a></td></tr>
+        <tr><td>Older 32-bit (x86)</td><td><a data-file="Kino-Setup-x86.exe">Setup</a></td><td><a data-file="Kino-Portable-x86.zip">Zip</a></td></tr>
+      </tbody>
+    </table>
+
+    <small>
+      Windows 10 (2004) or later. The installer needs no admin rights and adds Kino to the Start menu and Settings → Apps.
+      Windows may say "Windows protected your PC" because the app isn't code-signed yet: choose <b>More info → Run anyway</b>.
+      Not sure which you have? Settings → System → About → System type.
+      <br><a href="https://github.com/Sriharan-S/kino-enhanced-windows/releases/latest" id="all">All files, checksums and release notes</a>
+    </small>
+  </main>
+  <script>
+    "use strict";
+    const base = "https://github.com/Sriharan-S/kino-enhanced-windows/releases/latest/download/";
+    const labels = { x64: "For 64-bit PCs (x64)", arm64: "For ARM PCs (arm64)", x86: "For 32-bit PCs (x86)" };
+    for (const a of document.querySelectorAll("a[data-file]")) a.href = base + a.dataset.file;
+
+    function show(arch) {
+      document.getElementById("primary").href = base + "Kino-Setup-" + arch + ".exe";
+      document.getElementById("portable").href = base + "Kino-Portable-" + arch + ".zip";
+      document.getElementById("detected").textContent = labels[arch];
+    }
+    show("x64"); // most PCs; refined below where the browser can tell
+
+    (async () => {
+      try {
+        if (navigator.userAgentData && navigator.userAgentData.getHighEntropyValues) {
+          const v = await navigator.userAgentData.getHighEntropyValues(["architecture", "bitness"]);
+          if (v.architecture === "arm") show(v.bitness === "64" ? "arm64" : "x86");
+          else if (v.architecture === "x86") show(v.bitness === "32" ? "x86" : "x64");
+        } else if (/Windows NT/.test(navigator.userAgent) && !/Win64|WOW64|x64/.test(navigator.userAgent)) {
+          show("x86");
+        }
+      } catch { /* keep x64 */ }
+      try {
+        const r = await fetch("https://api.github.com/repos/Sriharan-S/kino-enhanced-windows/releases/latest");
+        if (r.ok) {
+          const rel = await r.json();
+          if (typeof rel.tag_name === "string") document.getElementById("version").textContent = "Version " + rel.tag_name.replace(/^v/, "");
+        }
+      } catch { /* the links work regardless */ }
+    })();
+  </script>
+</body>
+</html>

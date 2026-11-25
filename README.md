@@ -8,6 +8,27 @@ It is a full rework and restructure of the original [Kino](https://github.com/Sr
 
 📖 **Full specification:** [Wiki → docs](https://github.com/Sriharan-S/kino-enhanced/wiki/docs)
 
+## Download
+
+| Platform | Get it | |
+|---|---|---|
+| **Windows** 10/11 | **[Download page](https://kino-directory.srie.workers.dev/download)** (picks the right file for your PC) · [all files](https://github.com/Sriharan-S/kino-enhanced-windows/releases/latest) | Installer or portable, for x64, ARM64 and x86 |
+| Linux | Not yet | On hold |
+| Android | Not yet | On hold |
+| Web | Not yet | On hold |
+
+Direct links to the newest Windows version (they never change):
+
+| | Installer | Portable |
+|---|---|---|
+| x64 (most PCs) | [Kino-Setup-x64.exe](https://github.com/Sriharan-S/kino-enhanced-windows/releases/latest/download/Kino-Setup-x64.exe) | [Kino-Portable-x64.zip](https://github.com/Sriharan-S/kino-enhanced-windows/releases/latest/download/Kino-Portable-x64.zip) |
+| ARM64 (Snapdragon) | [Kino-Setup-arm64.exe](https://github.com/Sriharan-S/kino-enhanced-windows/releases/latest/download/Kino-Setup-arm64.exe) | [Kino-Portable-arm64.zip](https://github.com/Sriharan-S/kino-enhanced-windows/releases/latest/download/Kino-Portable-arm64.zip) |
+| x86 (32-bit) | [Kino-Setup-x86.exe](https://github.com/Sriharan-S/kino-enhanced-windows/releases/latest/download/Kino-Setup-x86.exe) | [Kino-Portable-x86.zip](https://github.com/Sriharan-S/kino-enhanced-windows/releases/latest/download/Kino-Portable-x86.zip) |
+
+**Where releases live:** each app is released from **its own repo**, built and attached by that repo's CI, so each
+platform has its own version history. This repo links to them. The links above use GitHub's `releases/latest/download/`
+form with version-less file names, so they always fetch the newest stable release.
+
 ## Terminology
 
 | Term | Meaning |
@@ -24,13 +45,16 @@ It is a full rework and restructure of the original [Kino](https://github.com/Sr
 - **Theatres:** The same Worker deployed under several Cloudflare accounts to spread the free-tier limits.
 - **Clients:** A native app per platform, each in its own repo.
 
-| Repo | Purpose | Status |
-|---|---|---|
-| `kino-enhanced` (this) | Theatre Worker code, protocol spec, docs, master TODO | Active |
-| [`kino-enhanced-windows`](https://github.com/Sriharan-S/kino-enhanced-windows) | Windows client (C# / WinUI 3 + libmpv) | Active |
-| `kino-enhanced-linux` | Linux client (C++ / Qt 6 + libmpv) | On hold |
-| `kino-enhanced-android` | Android client (Kotlin / Compose + libmpv) | On hold |
-| `kino-enhanced-web` | Web client (TypeScript) | On hold |
+| Repo | Purpose | Releases | Status |
+|---|---|---|---|
+| `kino-enhanced` (this) | Theatre Worker (`theatre/`), theatre list and download page (`directory/`), protocol spec (`protocol/`), docs, master TODO | Theatres deploy from here | Active |
+| [`kino-enhanced-windows`](https://github.com/Sriharan-S/kino-enhanced-windows) | Windows client (C# / WinUI 3 + libmpv) | [Latest](https://github.com/Sriharan-S/kino-enhanced-windows/releases/latest) | Active |
+| `kino-enhanced-linux` | Linux client (C++ / Qt 6 + libmpv) | n/a | On hold |
+| `kino-enhanced-android` | Android client (Kotlin / Compose + libmpv) | n/a | On hold |
+| `kino-enhanced-web` | Web client (TypeScript) | n/a | On hold |
+
+**Live theatres:** Aurora (`kino-aurora.srie.workers.dev`) and Nova (`kino-nova.sri-me.workers.dev`), each on its own free
+Cloudflare account. The [theatre list](https://kino-directory.srie.workers.dev/servers.json) tells the apps where they are.
 
 ---
 
