@@ -15,7 +15,7 @@ It is a full rework and restructure of the original [Kino](https://github.com/Sr
 | **Windows** 10/11 | **[Download page](https://kino-directory.srie.workers.dev/download)** (picks the right file for your PC) · [all files](https://github.com/Sriharan-S/kino-enhanced-windows/releases/latest) | Installer or portable, for x64, ARM64 and x86 |
 | Linux | Not yet | On hold |
 | Android | Not yet | On hold |
-| Web | Not yet | On hold |
+| Web | Coming soon | In progress |
 
 Direct links to the newest Windows version (they never change):
 
@@ -51,18 +51,33 @@ form with version-less file names, so they always fetch the newest stable releas
 | [`kino-enhanced-windows`](https://github.com/Sriharan-S/kino-enhanced-windows) | Windows client (C# / WinUI 3 + libmpv) | [Latest](https://github.com/Sriharan-S/kino-enhanced-windows/releases/latest) | Active |
 | `kino-enhanced-linux` | Linux client (C++ / Qt 6 + libmpv) | n/a | On hold |
 | `kino-enhanced-android` | Android client (Kotlin / Compose + libmpv) | n/a | On hold |
-| `kino-enhanced-web` | Web client (TypeScript) | n/a | On hold |
+| [`kino-enhanced-web`](https://github.com/Sriharan-S/kino-enhanced-web) | Web client (TypeScript / React) | Deployed continuously | In progress |
 
 **Live theatres:** Aurora (`kino-aurora.srie.workers.dev`) and Nova (`kino-nova.sri-me.workers.dev`), each on its own free
 Cloudflare account. The [theatre list](https://kino-directory.srie.workers.dev/servers.json) tells the apps where they are.
 
 ---
 
+## Roadmap
+
+| Milestone | What | Status |
+|---|---|---|
+| **Theatres** | Cloudflare Worker backend; Aurora and Nova live on separate free accounts; theatre list | ✅ Done |
+| **Windows 0.1** | The full feature set (sections 0–17 below): sync, lobby, roles, playlists, YouTube, chat, subtitles, player; installer and portable for x64 / x86 / ARM64 | ✅ [Released](https://github.com/Sriharan-S/kino-enhanced-windows/releases/latest) |
+| **Windows code signing** | Signed releases through SignPath Foundation (free for open source); the pipeline is ready | 🟨 Waiting for SignPath approval |
+| **Web** | Browser client in [`kino-enhanced-web`](https://github.com/Sriharan-S/kino-enhanced-web), hosted free on Cloudflare (section 18) | 🟨 In progress |
+| **Cross-platform** | Windows and Web in the same screen (17.6) | ⬜ After Web |
+| **Android** | Native client (Kotlin / Compose + libmpv) | ⏸ On hold |
+| **Linux** | Native client (C++ / Qt 6 + libmpv) | ⏸ On hold |
+| **Later** | User-added theatres (1.12), more theatres (Orion, Lyra, Vega, Polaris) | ⏸ |
+
+Detail for every item is in the checklist below and in the [spec](https://github.com/Sriharan-S/kino-enhanced/wiki/docs).
+
 ## TODO
 
 Status legend: ⬜ Not started · 🟨 In progress · ✅ Done · ⏸ On hold
 
-Tasks are worked through in order and checked off as they are completed. Windows is the first client; Linux, Android and Web are on hold.
+Tasks are worked through in order and checked off as they are completed. Windows (the first client) is done and released; the Web client is in progress (section 18); Linux and Android are on hold.
 
 ### 0. Foundation
 
@@ -201,7 +216,7 @@ Tasks are worked through in order and checked off as they are completed. Windows
 | 10.4  | Audio track selection             | Picture & sound → Audio track (title, language, codec, channels)                        | ✅     |
 | 10.5  | Fullscreen                        | F / F11 / button; Esc exits; top bar and side panel hide                                | ✅     |
 | 10.6  | Keyboard shortcuts                | Space/K, ←/→ 5 s, J/L 10 s, ↑/↓ volume, M, F, Esc, N/P, Home; never while typing        | ✅     |
-| 10.7  | Linux / Android / Web players     | Same features on the other platforms                                                    | ⏸     |
+| 10.7  | Linux / Android / Web players     | Web in progress (section 18); Linux and Android on hold                                 | 🟨    |
 
 ### 11. Sync Engine
 
@@ -252,7 +267,7 @@ Tasks are worked through in order and checked off as they are completed. Windows
 | 13.2  | Unsupported-format messaging      | Decoder failures name the codec; files that can't open say why                          | ✅     |
 | 13.3  | Linux: full codec support         | libmpv                                                                                  | ⏸     |
 | 13.4  | Android: full codec support       | libmpv; hardware plus software fallback                                                 | ⏸     |
-| 13.5  | Web: push support to its limits   | MSE, WebAssembly remux, WebCodecs                                                       | ⏸     |
+| 13.5  | Web: push support to its limits   | Web: MSE, WebAssembly remux, WebCodecs (18.13)                                          | ⬜     |
 
 ### 14. Viewer Customisation (local only, never sent to the theatre)
 
@@ -299,8 +314,26 @@ Tasks are worked through in order and checked off as they are completed. Windows
 | 17.2  | `servers.json` on Cloudflare Pages | Static-assets Worker `kino-directory` (Pages now deploys as Workers)                  | ✅     |
 | 17.3  | Linux build                      | AppImage / deb                                                                          | ⏸     |
 | 17.4  | Android build                    | APK                                                                                     | ⏸     |
-| 17.5  | Web build & hosting              | Cloudflare Pages                                                                        | ⏸     |
-| 17.6  | Cross-platform sync test         | Every platform in the same screen together                                              | ⏸     |
+| 17.5  | Web build & hosting              | Static-assets Worker on Cloudflare (18.2)                                               | 🟨    |
+| 17.6  | Cross-platform sync test         | Every platform in the same screen together                                              | ⬜     |
+
+### 18. Web client (`kino-enhanced-web`)
+
+| #     | Task                              | Details                                                                                 | Status |
+| ----- | --------------------------------- | --------------------------------------------------------------------------------------- | ------ |
+| 18.1  | Repo, tooling, CI                 | Vite + TypeScript + React; lint, format, tests; GitHub Actions                          | ⬜     |
+| 18.2  | Hosting                           | Static-assets Worker on Cloudflare (free); `/join` links open the web app            | ⬜     |
+| 18.3  | Protocol client & theatres        | Theatre list, parallel probes, WebSocket session with reconnect (port of Kino.Core)    | ⬜     |
+| 18.4  | Clock sync & sync engine          | Same algorithm and tests as Windows; `playbackRate` for smooth correction             | ⬜     |
+| 18.5  | Video player                      | HTML5 `<video>` with local files (file picker / drag and drop) and links             | ⬜     |
+| 18.6  | Lobby, create, join, invites      | Unified lobby, private screens, invite links                                            | ⬜     |
+| 18.7  | Playlist & file matching          | Durations read in the browser; duration-then-name matching; mismatch warning           | ⬜     |
+| 18.8  | YouTube                           | IFrame API directly; same rules as Windows                                              | ⬜     |
+| 18.9  | Chat, GIFs, reactions             | Same features as Windows                                                                | ⬜     |
+| 18.10 | Roles, moderation, settings       | Viewers panel, roles page, screen settings                                              | ⬜     |
+| 18.11 | Subtitles                         | VTT natively, SRT converted, shared subtitles; local style and offset                  | ⬜     |
+| 18.12 | Picture, sound, shortcuts         | Zoom/fit/aspect, volume, personal offset, fullscreen, keyboard                          | ⬜     |
+| 18.13 | Formats beyond the browser        | MKV/AC-3 etc. via remux / WebCodecs where possible (13.5); clear message otherwise      | ⬜     |
 
 ## Licence
 
