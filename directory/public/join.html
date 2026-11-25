@@ -20,6 +20,7 @@
     .theatre { font-size: .9rem; color: var(--muted); }
     a.button { display: block; text-align: center; margin: 20px 0 8px; padding: 12px; border-radius: 8px; text-decoration: none;
                background: var(--accent); color: var(--accent-text); font-weight: 600; }
+    a.button.secondary { margin-top: 0; background: transparent; color: var(--accent); border: 1px solid var(--accent); }
     .hidden { display: none; }
   </style>
 </head>
@@ -29,13 +30,15 @@
       <h1>You're invited to a Kino screen</h1>
       <div class="code" id="code"></div>
       <div class="theatre">on theatre <span id="theatre"></span></div>
-      <a class="button" id="open" href="#">Open in Kino</a>
-      <p>Nothing happened? Open Kino, choose <strong>Join a screen</strong>, and enter the code above.</p>
+      <a class="button" id="open" href="#">Open in the Kino app</a>
+      <a class="button secondary" id="web" href="https://kino-web.srie.workers.dev/">Watch in your browser</a>
+      <p>No app? Watch in your browser, or <a href="/download">download Kino</a>. In the app, you can also choose
+        <strong>Join a screen</strong> and enter the code above.</p>
       <p>Kino syncs playback only: everyone plays their own copy of the video.</p>
     </div>
     <div id="bad" class="hidden">
       <h1>This invite link isn't valid</h1>
-      <p>Ask for a new link, or open Kino and enter the screen code.</p>
+      <p>Ask for a new link, or open Kino (or <a href="https://kino-web.srie.workers.dev/">Kino for the web</a>) and enter the screen code.</p>
     </div>
   </main>
   <script>
@@ -50,8 +53,10 @@
       document.getElementById("code").textContent = code;
       document.getElementById("theatre").textContent = theatre.charAt(0).toUpperCase() + theatre.slice(1);
       document.getElementById("open").href = app;
+      document.getElementById("web").href = "https://kino-web.srie.workers.dev/#" + theatre + "/" + code;
       document.getElementById("ok").classList.remove("hidden");
-      location.href = app; // the browser asks before opening the app
+      // Try the app on desktops (the browser asks first); phones and tablets get the choice instead.
+      if (!/Android|iPhone|iPad|Mobile/i.test(navigator.userAgent)) location.href = app;
     })();
   </script>
 </body>
