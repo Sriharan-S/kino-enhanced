@@ -123,26 +123,26 @@ Counts every row in the phase tables (sub-tasks included); "—" rows are left o
 | 2 | ✅ 4 · ⬜ 1 | ✅ 2 · 🟨 1 | ✅ 2 · ⬜ 1 | ⏸ 3 | ⏸ 3 |
 | 3 | ✅ 6 · ⬜ 1 | ✅ 6 · 🟨 3 | ✅ 8 · 🟨 1 | ⏸ 9 | ⏸ 9 |
 | 4 | ✅ 4 · ⬜ 1 | ✅ 9 · 🟨 3 · ⬜ 1 | ✅ 8 · 🟨 4 · ⬜ 1 | ⏸ 13 | ⏸ 13 |
-| 5 | ✅ 22 · 🟨 3 | ✅ 19 · 🟨 3 | ✅ 13 · 🟨 2 · ⬜ 7 | ⏸ 22 | ⏸ 22 |
+| 5 | ✅ 22 · 🟨 3 | ✅ 19 · 🟨 3 | ✅ 13 · 🟨 9 | ⏸ 22 | ⏸ 22 |
 | 6 | ✅ 7 · ⬜ 1 | ✅ 6 · 🟨 2 · ⬜ 1 | ✅ 5 · 🟨 3 · ⬜ 1 | ⏸ 9 | ⏸ 9 |
 | 7 | ✅ 8 | ✅ 6 | 🟨 1 · ⬜ 5 | ⏸ 6 | ⏸ 6 |
 | 8 | ✅ 12 | ✅ 11 · 🟨 2 | ✅ 3 · 🟨 1 · ⬜ 9 | ⏸ 13 | ⏸ 13 |
 | 9 | ✅ 4 | ✅ 5 | ✅ 1 · ⬜ 4 | ⏸ 5 | ⏸ 5 |
 | 10 | ✅ 6 | ✅ 10 · 🟨 1 | ✅ 8 · 🟨 2 · ⬜ 1 | ⏸ 11 | ⏸ 11 |
-| 11 | ✅ 14 · ⬜ 1 | ✅ 25 · 🟨 1 · ⬜ 2 | ✅ 20 · 🟨 2 · ⬜ 6 | ⏸ 28 | ⏸ 28 |
+| 11 | ✅ 14 · ⬜ 1 | ✅ 25 · 🟨 1 · ⬜ 2 | ✅ 20 · 🟨 6 · ⬜ 2 | ⏸ 28 | ⏸ 28 |
 | 12 | — | ✅ 4 · 🟨 4 · ⬜ 2 | ✅ 6 · 🟨 1 · ⬜ 4 | ⏸ 11 | ⏸ 10 |
 | 13 | ✅ 7 | ✅ 19 · 🟨 2 · ⬜ 1 | ✅ 15 · 🟨 4 · ⬜ 3 | ⏸ 22 | ⏸ 22 |
 | 14 | ✅ 4 · ⬜ 1 | ✅ 8 · ⬜ 1 | ✅ 2 · 🟨 2 · ⬜ 5 | ⏸ 9 | ⏸ 9 |
 | 15 | — | ✅ 1 · 🟨 1 | 🟨 1 · ⬜ 3 | ⏸ 2 | ⏸ 2 |
 | 16 | ✅ 1 | ✅ 7 | ✅ 2 · ⬜ 5 | ⏸ 7 | ⏸ 7 |
 | 17 | ✅ 6 | ✅ 8 · 🟨 3 · ⬜ 1 | 🟨 2 · ⬜ 9 | ⏸ 12 | ⏸ 12 |
-| 18 | ✅ 7 | ✅ 9 | 🟨 9 | ⏸ 9 | ⏸ 9 |
+| 18 | ✅ 7 | ✅ 9 | ✅ 8 · 🟨 1 | ⏸ 9 | ⏸ 9 |
 | 19 | ✅ 1 | ✅ 2 · 🟨 5 | ✅ 7 | ⏸ 7 | ⏸ 7 |
 | 20 | ✅ 3 | ✅ 4 · 🟨 2 | ✅ 2 · 🟨 1 · ⬜ 2 | ⏸ 6 | ⏸ 6 |
 | 21 | ✅ 1 · ⬜ 13 | ✅ 1 · 🟨 1 · ⬜ 14 | ✅ 3 · 🟨 1 · ⬜ 13 | ⏸ 14 | ⏸ 14 |
 | 22 | ⏸ 4 | ⏸ 3 | ⏸ 3 | ⏸ 3 | ⏸ 3 |
 | 23 | ⬜ 23 | ⬜ 26 | ⬜ 28 | ⬜ 27 | ⬜ 26 |
-| **All** | **✅ 137 · 🟨 4 · ⬜ 45 · ⏸ 4** | **✅ 169 · 🟨 34 · ⬜ 49 · ⏸ 3** | **✅ 110 · 🟨 38 · ⬜ 108 · ⏸ 3** | **⬜ 27 · ⏸ 228** | **⬜ 26 · ⏸ 227** |
+| **All** | **✅ 137 · 🟨 4 · ⬜ 45 · ⏸ 4** | **✅ 169 · 🟨 34 · ⬜ 49 · ⏸ 3** | **✅ 118 · 🟨 41 · ⬜ 97 · ⏸ 3** | **⬜ 27 · ⏸ 228** | **⬜ 26 · ⏸ 227** |
 
 ---
 
@@ -619,18 +619,18 @@ enforces capacity (`full`) for joins by code; the owner is never refused for cap
 | C-5.8 | Leave frees the seat at once | §6.4, R2.6 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Th smoke; Win live; Web e2e |
 | C-5.9 | 60 s reconnect grace, shown to others | §6.4, R2.6 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Th smoke (optional 65 s step); clients UI: manual |
 | C-5.10 | Capacity, with seats held for reconnecting viewers | §6.4, R2.9 | 🟨 | — | — | — | — | Implemented; no automated test of `full` or of held seats |
-| C-5.11 | Screen settings | §6.3, R2.10 | ✅ | 🟨 | 🟨 | ⏸ | ⏸ | Th smoke. Sub-tasks below |
-| C-5.11.1 | Rename the screen | §6.3 | ✅ | 🟨 | ⬜ | ⏸ | ⏸ | Win: "needs a name" error is shown in a hidden overlay |
-| C-5.11.2 | Visibility and password | §6.3 | ✅ | 🟨 | ⬜ | ⏸ | ⏸ | Win: "Set a password" error is shown in a hidden overlay |
-| C-5.11.3 | Hide from lobby | §6.3 | ✅ | ✅ | ⬜ | ⏸ | ⏸ | |
-| C-5.11.4 | Max viewers | §6.3 | ✅ | ✅ | ⬜ | ⏸ | ⏸ | |
-| C-5.11.5 | Show devices | §6.3, R9.3 | ✅ | ✅ | ⬜ | ⏸ | ⏸ | |
+| C-5.11 | Screen settings | §6.3, R2.10 | ✅ | 🟨 | 🟨 | ⏸ | ⏸ | Th smoke. Web: Settings dialog sends only changed fields, follows `screen`, read-only without permission (unit + browser test); by-hand check pending |
+| C-5.11.1 | Rename the screen | §6.3 | ✅ | 🟨 | 🟨 | ⏸ | ⏸ | Win: "needs a name" error is shown in a hidden overlay. Web: browser test (rename reaches the viewer); by-hand check pending |
+| C-5.11.2 | Visibility and password | §6.3 | ✅ | 🟨 | 🟨 | ⏸ | ⏸ | Win: "Set a password" error is shown in a hidden overlay. Web: unit (password rules); by-hand check pending |
+| C-5.11.3 | Hide from lobby | §6.3 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Web: only offered when private (unit); by-hand check pending |
+| C-5.11.4 | Max viewers | §6.3 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Web: 2–25, validated (unit, browser test); by-hand check pending |
+| C-5.11.5 | Show devices | §6.3, R9.3 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Web: unit; by-hand check pending |
 | C-5.11.6 | Auto-advance | §6.3 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Th smoke |
-| C-5.11.7 | Buffering policy | §6.3, §14.10 | ✅ | ✅ | ⬜ | ⏸ | ⏸ | Th smoke |
+| C-5.11.7 | Buffering policy | §6.3, §14.10 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th smoke. Web: Keep playing / Wait for everyone (unit); by-hand check pending |
 | C-5.12 | Lifecycle timers | §6.5, R2.11, R4.5 | 🟨 | — | — | — | — | Implemented; the 5 and 15 minute closes have no automated test |
-| C-5.13 | Close the screen | §6.5, R2.11 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th smoke |
-| C-5.13.1 | Host closes, with confirmation | §6.5 | ✅ | ✅ | ⬜ | ⏸ | ⏸ | |
-| C-5.13.2 | Everyone else returns to the lobby with the reason | §6.5 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Web live |
+| C-5.13 | Close the screen | §6.5, R2.11 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th smoke. Web: see sub-tasks; by-hand check pending |
+| C-5.13.1 | Host closes, with confirmation | §6.5 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Web: "Close screen…" in Settings for the host only (not the acting host), asks "Close the screen for everyone?" (browser test); by-hand check pending |
+| C-5.13.2 | Everyone else returns to the lobby with the reason | §6.5 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Web live; the theatre's own reason is shown ("The host closed the screen."), browser test |
 
 #### C-5.1 Terminology
 Acceptance criteria: the UI says Theatre, Screen, Host, Co-host, Acting host and Viewer as defined in §2, never
@@ -727,15 +727,15 @@ Acceptance criteria: after closing, the code no longer resolves and the screen i
 | ID | Task | § | Th | Win | Web | And | Lin | Tests / notes |
 |---|---|---|---|---|---|---|---|---|
 | C-6.1 | Screen code: 6 characters, Crockford base32, unique per theatre | §6.2, R8.1 | ✅ | — | — | — | — | Th unit |
-| C-6.2 | Code entry: normalised, and accepts a pasted link | §11 | ✅ | 🟨 | 🟨 | ⏸ | ⏸ | Win: typed codes aren't normalised by the client; neither client parses a link pasted into the code box |
+| C-6.2 | Code entry: normalised, and accepts a pasted link | §11 | ✅ | 🟨 | 🟨 | ⏸ | ⏸ | Win: typed codes aren't normalised by the client. Web: spaces and dashes ignored, a pasted invite link joins that screen (browser test); by-hand check pending |
 | C-6.3 | Invite link formats | §11, §21.1, R8.2 | — | ✅ | ✅ | ⏸ | ⏸ | Win unit; Web unit |
 | C-6.4 | Directory join page | §11, §21.1 | ✅ | — | — | — | — | UI: manual |
 | C-6.5 | Join by code across every theatre | §10.4, R8.3 | — | ✅ | ✅ | ⏸ | ⏸ | Win unit; Web live (resolve), UI: manual |
 | C-6.6 | Private join: password prompt in place | §11, R8.4 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Th smoke; Win live; Web live |
 | C-6.7 | Password security and attempt limits | §11, R8.5 | ✅ | — | — | — | — | Th smoke (6th wrong password limited) |
 | C-6.8 | Members rejoin without the password | §6.4 | ✅ | 🟨 | ✅ | ⏸ | ⏸ | Web live. Win: reconnects skip it; not checked whether a later join from the lobby still asks |
-| C-6.9 | Invite panel: code and links with copy | §11 | — | ✅ | 🟨 | ⏸ | ⏸ | Web: no "copy code" button |
-| C-6.10 | Regenerate the code | §11, R8.6 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th smoke. Web: no confirmation before old links stop working |
+| C-6.9 | Invite panel: code and links with copy | §11 | — | ✅ | 🟨 | ⏸ | ⏸ | Web: code, Copy code, invite and browser links, sharing sentence (adds "ask me for the password" when private) (browser test); by-hand check pending |
+| C-6.10 | Regenerate the code | §11, R8.6 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th smoke. Web: asks first; the new code reaches every client and the old one stops resolving (browser test); by-hand check pending |
 | C-6.11 | `screen.invite` controls who sees the code | §8.1 | ⬜ | ⬜ | ⬜ | ⏸ | ⏸ | Spec and code disagree (Appendix B 8); decide first |
 | C-6.12 | Opening invite links on each platform | §11 | — | ✅ | ✅ | ⏸ | ⏸ | Win: `kino://` handler + single instance; Web: `#theatre/code` in the address |
 
@@ -1074,13 +1074,13 @@ same tests.
 | C-11.16 | Late join and reconnect catch-up | §14.11, R11.11 | — | ✅ | ✅ | ⏸ | ⏸ | Win live; Web live + e2e. Reconnect burst size: C-3.7 |
 | C-11.17 | Buffering policy "Wait for everyone" | §14.10, R11.12 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Th smoke; Win live; Web UI: manual. The setting itself is C-5.11.7 |
 | C-11.18 | Playlist transitions | §14.12, R11.13 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Th smoke; Win unit; Web unit |
-| C-11.19 | Ready check | §14.14, R11.14 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th smoke; Win live |
-| C-11.19.1 | Start a ready check | §14.14 | ✅ | ✅ | ⬜ | ⏸ | ⏸ | Web: `startReadyCheck` exists, no button |
+| C-11.19 | Ready check | §14.14, R11.14 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th smoke; Win live. Web: see sub-tasks; by-hand check pending |
+| C-11.19.1 | Start a ready check | §14.14 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Web: "Ready check" in the top bar with `screen.ready_check` (browser test); by-hand check pending |
 | C-11.19.2 | Prompt with Ready and Not yet | §14.14 | ✅ | ✅ | ✅ | ⏸ | ⏸ | |
-| C-11.19.3 | Live tally | §14.14 | ✅ | ✅ | ⬜ | ⏸ | ⏸ | |
-| C-11.19.4 | 30 s countdown | §14.14 | ✅ | ✅ | ⬜ | ⏸ | ⏸ | |
-| C-11.19.5 | Result shown | §14.14 | ✅ | ✅ | ⬜ | ⏸ | ⏸ | The result is a chat system message, and the web has no chat |
-| C-11.20 | Personal sync offset | §14.15, R11.15 | — | ✅ | 🟨 | ⏸ | ⏸ | Win unit. Web: the engine supports it (unit test), no control |
+| C-11.19.3 | Live tally | §14.14 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Web: "n of m ready" among connected viewers (unit, browser test); by-hand check pending |
+| C-11.19.4 | 30 s countdown | §14.14 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Web: seconds left from the theatre's deadline (browser test); by-hand check pending |
+| C-11.19.5 | Result shown | §14.14 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Web: "Everyone is ready" or "Ready check: n of m ready" for 5 s, and in chat (browser test); by-hand check pending |
+| C-11.20 | Personal sync offset | §14.15, R11.15 | — | ✅ | 🟨 | ⏸ | ⏸ | Win unit. Web: ⏱ control in the player bar, −2000 to +2000 ms, local only, remembered (browser test); by-hand check pending |
 | C-11.21 | Sync readout for the viewer | §14 | — | ✅ | ✅ | ⏸ | ⏸ | Zone, drift, rate. UI: manual |
 | C-11.22 | Shared sync test vectors across engines | §14 | ⬜ | ⬜ | ⬜ | ⏸ | ⏸ | Today the tests are ported by hand |
 | C-11.23 | Sleep, lock and background behaviour | §14.11 | — | 🟨 | ✅ | ⏸ | ⏸ | Win: recovers through reconnect; not tested. Web: the engine ticks from a dedicated worker (not throttled in background tabs); a tick gap over 3 s runs a full clock burst (live test); 30 minutes hidden checked by hand |
@@ -1638,15 +1638,15 @@ videos" (§17.1).
 
 | ID | Task | § | Th | Win | Web | And | Lin | Tests / notes |
 |---|---|---|---|---|---|---|---|---|
-| C-18.1 | Text chat with an unread count | §18, R16.1 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th smoke; Win unit (parse). Web: Chat tab, 500-character input, Enter to send, unread badge; browser test (`scripts/e2e.mjs`); by-hand check pending |
-| C-18.2 | Chat history for late joiners | §18, R16.2 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th smoke. Web: `welcome.chat` shown on join, de-duplicated by id; browser test (`scripts/e2e.mjs`); by-hand check pending |
-| C-18.3 | Emoji reactions | §18, R16.3 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th smoke. Web: see sub-tasks; by-hand check pending |
-| C-18.3.1 | Send a reaction | §18 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Web: reaction bar with the 8 reactions, follows `chat.react` and mute; browser test (`scripts/e2e.mjs`); by-hand check pending |
-| C-18.3.2 | Reactions float over the video for 3 s | §18 | — | ✅ | 🟨 | ⏸ | ⏸ | Web: float for 3 s with the sender's name, at most 6 at once, not stored; reduced-motion fades instead; browser test (`scripts/e2e.mjs`); by-hand check pending |
-| C-18.4 | GIF search (GIPHY, key kept on the device) | §18, R16.4, R16.5 | — | ✅ | 🟨 | ⏸ | ⏸ | Win unit. Web: GIPHY from the browser (trending when empty, 24 results, pg-13), key in local storage only; unit (parse) and browser test (`scripts/e2e.mjs`) when `KINO_GIPHY_KEY` is set (not in CI); by-hand check pending |
-| C-18.5 | Pasted GIF links | §18, R16.4 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th unit (allow list); Win unit. Web: unit (same allow list) and browser test (`scripts/e2e.mjs`); by-hand check pending |
-| C-18.6 | System messages | §18, R16.6 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th smoke. Web: shown in chat, styled apart; browser test (`scripts/e2e.mjs`); by-hand check pending |
-| C-18.7 | Chat permissions and muted state | §18, R16.7 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th smoke. Web: input, GIF button and reaction bar follow `chat.send`, `chat.gif`, `chat.react` and mute, with the reason; "Slow down a little" shown in the chat panel (browser test (`scripts/e2e.mjs`)). The muted state can't be exercised from the web UI until moderation lands (WEB-9.1) |
+| C-18.1 | Text chat with an unread count | §18, R16.1 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Th smoke; Win unit (parse). Web: browser test; checked by hand |
+| C-18.2 | Chat history for late joiners | §18, R16.2 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Th smoke. Web: browser test; checked by hand |
+| C-18.3 | Emoji reactions | §18, R16.3 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Th smoke. Web: browser test; checked by hand |
+| C-18.3.1 | Send a reaction | §18 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Web: browser test; checked by hand |
+| C-18.3.2 | Reactions float over the video for 3 s | §18 | — | ✅ | ✅ | ⏸ | ⏸ | Web: browser test; checked by hand |
+| C-18.4 | GIF search (GIPHY, key kept on the device) | §18, R16.4, R16.5 | — | ✅ | ✅ | ⏸ | ⏸ | Win unit. Web: unit (parse), browser test with `KINO_GIPHY_KEY` (not in CI); checked by hand |
+| C-18.5 | Pasted GIF links | §18, R16.4 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Th unit (allow list); Win unit. Web: unit and browser test; checked by hand |
+| C-18.6 | System messages | §18, R16.6 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Th smoke. Web: browser test; checked by hand |
+| C-18.7 | Chat permissions and muted state | §18, R16.7 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th smoke. Web: permissions and "Slow down a little" work (browser test, checked by hand); the muted state can't be exercised from the web UI until moderation lands (WEB-9.1) |
 
 #### C-18.1 Text chat
 Acceptance criteria: a Chat tab; messages up to 500 characters (newlines kept, control characters dropped; the client
