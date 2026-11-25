@@ -114,7 +114,8 @@ describe("YouTube links", () => {
       "https://www.youtube.com/shorts/aqz-KE-bpKQ",
       "https://www.youtube.com/embed/aqz-KE-bpKQ",
       "aqz-KE-bpKQ",
-    ]) expect(youtubeUrl(link)).toBe(canon);
+    ])
+      expect(youtubeUrl(link)).toBe(canon);
   });
 
   it("rejects other sites and malformed ids", () => {

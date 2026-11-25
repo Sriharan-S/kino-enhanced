@@ -58,7 +58,14 @@ export interface Member {
 export function defaultRoles(): Role[] {
   return [
     { id: COHOST_ROLE, name: "Co-host", colour: "#e8a33d", position: RANK.cohost, permissions: [...PERMISSIONS], builtin: true },
-    { id: VIEWER_ROLE, name: "Viewer", colour: null, position: RANK.viewer, permissions: ["chat.send", "chat.gif", "chat.react"], builtin: true },
+    {
+      id: VIEWER_ROLE,
+      name: "Viewer",
+      colour: null,
+      position: RANK.viewer,
+      permissions: ["chat.send", "chat.gif", "chat.react"],
+      builtin: true,
+    },
   ];
 }
 
@@ -76,9 +83,7 @@ export interface Subject {
 }
 
 export function rolesOf(s: Subject, roles: Role[]): Role[] {
-  return roles.filter(
-    (r) => r.id === VIEWER_ROLE || (r.id === COHOST_ROLE && s.isCoHost) || (!r.builtin && s.member.roles.includes(r.id)),
-  );
+  return roles.filter((r) => r.id === VIEWER_ROLE || (r.id === COHOST_ROLE && s.isCoHost) || (!r.builtin && s.member.roles.includes(r.id)));
 }
 
 /** Highest rank: host 1000, co-host / acting host 900, else the highest custom role, else 0. */

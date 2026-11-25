@@ -1,0 +1,59 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  theatre:
+    name: Theatre (typecheck, format, unit tests)
+    runs-on: ubuntu-24.04
+    defaults:
+      run:
+        working-directory: theatre
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: theatre/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run format:check
+      - run: npm test
+
+  smoke:
+    name: Theatre end-to-end (wrangler dev + smoke test)
+    runs-on: ubuntu-24.04
+    needs: theatre
+    defaults:
+      run:
+        working-directory: theatre
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: theatre/package-lock.json
+      - run: npm ci
+      - name: Start a local theatre
+        run: |
+          npx wrangler dev --port 8787 > wrangler.log 2>&1 &
+          for i in $(seq 1 60); do curl -sf http://127.0.0.1:8787/info > /dev/null && exit 0; sleep 1; done
+          cat wrangler.log; exit 1
+      - run: npm run smoke
+      - if: failure()
+        run: cat wrangler.log
+
+  protocol:
+    name: Protocol examples are valid JSON
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: for f in protocol/examples/*/*.json; do node -e "JSON.parse(require('fs').readFileSync('$f','utf8'))" || exit 1; done

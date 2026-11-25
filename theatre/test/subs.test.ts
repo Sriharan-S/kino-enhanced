@@ -21,7 +21,15 @@ describe("subtitle uploads", () => {
   });
 
   it("limits files per item and per screen", () => {
-    const meta = (i: number, itemId: string): S.SubMeta => ({ id: `s${i}`, itemId, name: "a.srt", format: "srt", size: 1, from: "a", fromName: "A" });
+    const meta = (i: number, itemId: string): S.SubMeta => ({
+      id: `s${i}`,
+      itemId,
+      name: "a.srt",
+      format: "srt",
+      size: 1,
+      from: "a",
+      fromName: "A",
+    });
     const perItem = Array.from({ length: S.MAX_SUBS_PER_ITEM }, (_, i) => meta(i, "i1"));
     expect(() => S.checkRoom(perItem, "i1")).toThrow(/per item/);
     expect(() => S.checkRoom(perItem, "i2")).not.toThrow();

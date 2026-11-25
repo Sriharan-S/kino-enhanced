@@ -48,7 +48,15 @@ export function successorAfterRemoval(before: Item[], removedId: string): Item |
  * The host's duration is the reference (§13.5).
  */
 export function endsAt(anchor: Anchor, item: Item | null): number | null {
-  if (!item || item.kind === "youtube" || item.duration === null || anchor.state !== "playing" || anchor.itemId !== item.id || anchor.rate <= 0) return null;
+  if (
+    !item ||
+    item.kind === "youtube" ||
+    item.duration === null ||
+    anchor.state !== "playing" ||
+    anchor.itemId !== item.id ||
+    anchor.rate <= 0
+  )
+    return null;
   const remaining = Math.max(0, item.duration - anchor.position);
   return anchor.at + (remaining * 1000) / anchor.rate;
 }

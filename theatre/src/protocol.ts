@@ -243,7 +243,10 @@ function num(v: unknown, field: string, min = -Infinity, max = Infinity): number
 
 export function cleanName(v: unknown, field: string, max: number): string {
   // Collapse whitespace and strip control characters.
-  const s = str(v, field, max * 4).replace(/[\u0000-\u001f\u007f]/g, "").replace(/\s+/g, " ").trim();
+  const s = str(v, field, max * 4)
+    .replace(/[\u0000-\u001f\u007f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
   if (s.length < 1 || s.length > max) throw new ProtocolError("bad_request", `${field} must be 1-${max} characters`);
   return s;
 }
@@ -283,7 +286,9 @@ function itemId(v: unknown): string {
 export function youtubeUrl(v: string): string | null {
   const id = /^[A-Za-z0-9_-]{11}$/.test(v)
     ? v
-    : (/^https:\/\/(?:www\.|m\.|music\.)?(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{11})(?:[?&#/].*)?$/.exec(v)?.[1] ?? null);
+    : (/^https:\/\/(?:www\.|m\.|music\.)?(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{11})(?:[?&#/].*)?$/.exec(
+        v,
+      )?.[1] ?? null);
   return id ? `https://www.youtube.com/watch?v=${id}` : null;
 }
 
@@ -345,7 +350,8 @@ export function parseClientMessage(raw: string | ArrayBuffer): ClientMessage {
     case "load":
       return { type: "load", data: newItem(d) };
     case "playlist.add": {
-      if (!Array.isArray(d.items) || d.items.length < 1 || d.items.length > 200) throw new ProtocolError("bad_request", "items must be 1-200 items");
+      if (!Array.isArray(d.items) || d.items.length < 1 || d.items.length > 200)
+        throw new ProtocolError("bad_request", "items must be 1-200 items");
       return {
         type: "playlist.add",
         data: { items: d.items.map((it) => newItem(isObj(it) ? it : {})), at: d.at === undefined ? undefined : num(d.at, "at", 0, 1000) },
@@ -389,7 +395,8 @@ export function parseClientMessage(raw: string | ArrayBuffer): ClientMessage {
       if (!isReaction(d.emoji)) throw new ProtocolError("bad_request", "unsupported reaction");
       return { type: "react", data: { emoji: d.emoji } };
     case "skip":
-      if (d.direction !== "next" && d.direction !== "previous") throw new ProtocolError("bad_request", "direction must be next or previous");
+      if (d.direction !== "next" && d.direction !== "previous")
+        throw new ProtocolError("bad_request", "direction must be next or previous");
       return { type: "skip", data: { direction: d.direction } };
     case "reanchor":
       return { type: "reanchor", data: { position: num(d.position, "position", 0, 1e7), at: num(d.at, "at") } };
@@ -446,7 +453,8 @@ export function parseClientMessage(raw: string | ArrayBuffer): ClientMessage {
       const out: Extract<ClientMessage, { type: "settings.update" }>["data"] = {};
       if (d.name !== undefined) out.name = cleanName(d.name, "name", LIMITS.screenName);
       if (d.visibility !== undefined) {
-        if (d.visibility !== "public" && d.visibility !== "private") throw new ProtocolError("bad_request", "visibility must be public or private");
+        if (d.visibility !== "public" && d.visibility !== "private")
+          throw new ProtocolError("bad_request", "visibility must be public or private");
         out.visibility = d.visibility;
       }
       if (d.password !== undefined) out.password = str(d.password, "password", LIMITS.password);
@@ -455,7 +463,8 @@ export function parseClientMessage(raw: string | ArrayBuffer): ClientMessage {
       if (d.showDevices !== undefined) out.showDevices = bool(d.showDevices, "showDevices");
       if (d.autoAdvance !== undefined) out.autoAdvance = bool(d.autoAdvance, "autoAdvance");
       if (d.bufferingPolicy !== undefined) {
-        if (d.bufferingPolicy !== "keep" && d.bufferingPolicy !== "wait") throw new ProtocolError("bad_request", "bufferingPolicy must be keep or wait");
+        if (d.bufferingPolicy !== "keep" && d.bufferingPolicy !== "wait")
+          throw new ProtocolError("bad_request", "bufferingPolicy must be keep or wait");
         out.bufferingPolicy = d.bufferingPolicy;
       }
       return { type: "settings.update", data: out };

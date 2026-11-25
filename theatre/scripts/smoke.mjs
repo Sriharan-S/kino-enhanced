@@ -211,7 +211,10 @@ host.send("cohosts.set", { viewers: [carolId] });
 await carol.next("viewers", (l) => me(l, carolId)?.coHost === 1);
 host.close();
 const acting = await carol.next("viewers", (l) => me(l, carolId)?.actingHost === true);
-assert.ok(acting.some((v) => v.isHost && v.connected === false), "host shown as reconnecting");
+assert.ok(
+  acting.some((v) => v.isHost && v.connected === false),
+  "host shown as reconnecting",
+);
 carol.send("seek", { to: 42 });
 await viewer.next("anchor", (a) => a.position === 42);
 const [host2, hw2] = await join(code, screenId, hostSecret, "Host");
@@ -351,7 +354,10 @@ step(`history (${history.length} messages incl. joins, roles, now playing) reach
 // --- YouTube items (§14.13): everyone must finish before the screen moves on
 eve.send("playlist.add", { items: [{ kind: "youtube", name: "Trailer", duration: null, url: "https://youtu.be/aqz-KE-bpKQ" }] });
 assert.equal((await eve.next("error")).code, "forbidden"); // playlist.add_external
-host2.send("playlist.add", { items: [{ kind: "youtube", name: "Trailer", duration: null, url: "https://youtu.be/aqz-KE-bpKQ?t=5" }], at: 0 });
+host2.send("playlist.add", {
+  items: [{ kind: "youtube", name: "Trailer", duration: null, url: "https://youtu.be/aqz-KE-bpKQ?t=5" }],
+  at: 0,
+});
 const ytList = await eve.next("playlist", (l) => l.some((i) => i.kind === "youtube"));
 const yt = ytList.find((i) => i.kind === "youtube");
 assert.equal(yt.url, "https://www.youtube.com/watch?v=aqz-KE-bpKQ");

@@ -555,7 +555,8 @@ export class ScreenDO extends DurableObject<Env> {
       case "skip": {
         this.require(me, "playback.skip");
         const item = P.neighbour(s.playlist, s.item?.id ?? null, msg.data.direction === "next" ? 1 : -1);
-        if (!item) throw new ProtocolError("bad_request", msg.data.direction === "next" ? "this is the last item" : "this is the first item");
+        if (!item)
+          throw new ProtocolError("bad_request", msg.data.direction === "next" ? "this is the last item" : "this is the first item");
         return this.setCurrent(item, s.anchor.state === "playing" || msg.data.direction === "next");
       }
 
@@ -595,7 +596,10 @@ export class ScreenDO extends DurableObject<Env> {
         }
         if (d.position !== undefined && d.position >= myRank) throw new ProtocolError("forbidden", "a role must rank below your own");
         if (d.permissions) {
-          this.requireGrantable(actor, d.permissions.filter((p) => !role.permissions.includes(p)));
+          this.requireGrantable(
+            actor,
+            d.permissions.filter((p) => !role.permissions.includes(p)),
+          );
           role.permissions = R.uniquePermissions(d.permissions);
         }
         if (d.name !== undefined) role.name = d.name;
@@ -628,7 +632,8 @@ export class ScreenDO extends DurableObject<Env> {
         m.roles = msg.data.assigned ? [...new Set([...m.roles, role.id])] : m.roles.filter((id) => id !== role.id);
         await this.save();
         this.broadcastViewers();
-        if (had !== msg.data.assigned) await this.system(msg.data.assigned ? `${m.name} is now ${role.name}` : `${m.name} is no longer ${role.name}`);
+        if (had !== msg.data.assigned)
+          await this.system(msg.data.assigned ? `${m.name} is now ${role.name}` : `${m.name} is no longer ${role.name}`);
         return;
       }
 
@@ -861,7 +866,14 @@ export class ScreenDO extends DurableObject<Env> {
   /** Resume now, and don't wait again for anyone buffering at this moment. */
   private async releaseHold(by: string | null): Promise<void> {
     const s = this.state!;
-    s.holdIgnored = [...new Set([...s.holdIgnored, ...this.online().filter(([, a]) => a.buffering).map(([, a]) => a.key)])];
+    s.holdIgnored = [
+      ...new Set([
+        ...s.holdIgnored,
+        ...this.online()
+          .filter(([, a]) => a.buffering)
+          .map(([, a]) => a.key),
+      ]),
+    ];
     const wasHeld = s.hold !== null;
     await this.setHold(null);
     if (wasHeld && by) await this.system(`${by} resumed without waiting`);
@@ -918,7 +930,8 @@ export class ScreenDO extends DurableObject<Env> {
     }
     if (request.method !== "POST" || id) throw new ProtocolError("bad_request", "unsupported request");
 
-    if (!R.can(this.subject(key), "subtitles.share", s.roles)) throw new ProtocolError("forbidden", "you don't have permission: subtitles.share");
+    if (!R.can(this.subject(key), "subtitles.share", s.roles))
+      throw new ProtocolError("forbidden", "you don't have permission: subtitles.share");
     const { itemId, name, format } = S.parseUpload(new URL(request.url));
     const item = s.playlist.find((it) => it.id === itemId);
     if (!item) throw new ProtocolError("not_found", "no such item");
@@ -929,7 +942,15 @@ export class ScreenDO extends DurableObject<Env> {
     S.checkBody(body);
 
     const member = s.members[key]!;
-    const meta: S.SubMeta = { id: `s${++s.subSeq}`, itemId, name, format, size: body.byteLength, from: key.slice(0, 12), fromName: member.name };
+    const meta: S.SubMeta = {
+      id: `s${++s.subSeq}`,
+      itemId,
+      name,
+      format,
+      size: body.byteLength,
+      from: key.slice(0, 12),
+      fromName: member.name,
+    };
     await this.ctx.storage.put(S.storageKey(meta.id), body);
     s.subs = [...s.subs, meta];
     await this.save();
@@ -953,7 +974,13 @@ export class ScreenDO extends DurableObject<Env> {
     if (this.state!.members[me.key]?.muted) throw new ProtocolError("forbidden", "you are muted in this screen");
   }
 
-  private rateLimit(ws: WebSocket, me: Attachment, field: "chatTimes" | "reactTimes", rate: { count: number; windowMs: number }, now: number): void {
+  private rateLimit(
+    ws: WebSocket,
+    me: Attachment,
+    field: "chatTimes" | "reactTimes",
+    rate: { count: number; windowMs: number },
+    now: number,
+  ): void {
     const times = C.allow(me[field], now, rate);
     if (!times) throw new ProtocolError("rate_limited", "slow down a little");
     me[field] = times;
@@ -1092,7 +1119,8 @@ export class ScreenDO extends DurableObject<Env> {
 
   private newItems(items: NewItem[]): Item[] {
     const s = this.state!;
-    if (s.playlist.length + items.length > P.MAX_PLAYLIST) throw new ProtocolError("bad_request", `playlists hold at most ${P.MAX_PLAYLIST} items`);
+    if (s.playlist.length + items.length > P.MAX_PLAYLIST)
+      throw new ProtocolError("bad_request", `playlists hold at most ${P.MAX_PLAYLIST} items`);
     return items.map((it) => ({ id: `i${++s.itemSeq}`, ...it }));
   }
 

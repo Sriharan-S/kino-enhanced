@@ -35,13 +35,15 @@ export function parseUpload(url: URL): { itemId: string; name: string; format: S
 /** The body must be gzip (magic bytes 1f 8b) and within the size limit. */
 export function checkBody(body: ArrayBuffer): void {
   if (body.byteLength === 0) throw new ProtocolError("bad_request", "empty file");
-  if (body.byteLength > MAX_SUB_BYTES) throw new ProtocolError("bad_request", `subtitle files must be at most ${MAX_SUB_BYTES / 1024 / 1024} MB compressed`);
+  if (body.byteLength > MAX_SUB_BYTES)
+    throw new ProtocolError("bad_request", `subtitle files must be at most ${MAX_SUB_BYTES / 1024 / 1024} MB compressed`);
   const b = new Uint8Array(body, 0, 2);
   if (b[0] !== 0x1f || b[1] !== 0x8b) throw new ProtocolError("bad_request", "upload must be gzip-compressed");
 }
 
 export function checkRoom(subs: SubMeta[], itemId: string): void {
-  if (subs.length >= MAX_SUBS_PER_SCREEN) throw new ProtocolError("bad_request", `at most ${MAX_SUBS_PER_SCREEN} shared subtitle files per screen`);
+  if (subs.length >= MAX_SUBS_PER_SCREEN)
+    throw new ProtocolError("bad_request", `at most ${MAX_SUBS_PER_SCREEN} shared subtitle files per screen`);
   if (subs.filter((s) => s.itemId === itemId).length >= MAX_SUBS_PER_ITEM) {
     throw new ProtocolError("bad_request", `at most ${MAX_SUBS_PER_ITEM} shared subtitle files per item`);
   }
