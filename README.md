@@ -207,7 +207,7 @@ Tasks are worked through in order and checked off as they are completed. Windows
 | 12.2  | Pick a local folder               | Add folder: its media files, natural-sorted                                             | ✅     |
 | 12.3  | Multi-select local files          | Add files (multi-select)                                                                | ✅     |
 | 12.4  | Default order A–Z                 | Natural sort, case-insensitive (`EP 2` before `EP 10`)                                  | ✅     |
-| 12.5  | Host-defined order                | Move up/down from the item menu; drag-and-drop pending                                  | 🟨    |
+| 12.5  | Host-defined order                | Drag and drop in the Playlist tab (or Move up/down); needs `playlist.reorder`           | ✅     |
 | 12.6  | Local item mapping                | Auto-match (duration first, then name); "Choose my file…" and "Match my files…"         | ✅     |
 | 12.7  | Mismatch check: duration first    | Tolerance max(2 s, 0.5%)                                                                | ✅     |
 | 12.8  | Mismatch check: filename second   | Ignores case, extension and . _ - separators                                            | ✅     |
