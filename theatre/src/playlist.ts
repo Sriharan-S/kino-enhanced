@@ -41,11 +41,14 @@ export function successorAfterRemoval(before: Item[], removedId: string): Item |
 }
 
 /**
+ * YouTube items are excluded: ads and buffering make their end unpredictable, so the screen waits until every viewer
+ * reports the end (§14.13).
+ *
  * Theatre time (ms) at which the current item ends, if the anchor is playing and its duration is known.
  * The host's duration is the reference (§13.5).
  */
 export function endsAt(anchor: Anchor, item: Item | null): number | null {
-  if (!item || item.duration === null || anchor.state !== "playing" || anchor.itemId !== item.id || anchor.rate <= 0) return null;
+  if (!item || item.kind === "youtube" || item.duration === null || anchor.state !== "playing" || anchor.itemId !== item.id || anchor.rate <= 0) return null;
   const remaining = Math.max(0, item.duration - anchor.position);
   return anchor.at + (remaining * 1000) / anchor.rate;
 }

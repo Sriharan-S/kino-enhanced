@@ -213,10 +213,10 @@ Tasks are worked through in order and checked off as they are completed. Windows
 | 12.8  | Mismatch check: filename second   | Ignores case, extension and . _ - separators                                            | ✅     |
 | 12.9  | Mismatch indicator                | ⚠ in the playlist and overlay; playback continues                                       | ✅     |
 | 12.10 | Privacy of local files            | Only file name and duration are sent                                                    | ✅     |
-| 12.11 | External media: YouTube           | Official IFrame API in a WebView                                                        | ⬜     |
-| 12.12 | YouTube sync rules                | No rate correction; seek-based sync; wait for everyone at the end                       | ⬜     |
+| 12.11 | External media: YouTube           | IFrame player in WebView2; page on the directory site (https origin); Add link… accepts YouTube links | ✅     |
+| 12.12 | YouTube sync rules                | No rate correction; seek beyond 1.5 s; ads/buffering = buffering; advance once everyone has finished | ✅     |
 | 12.13 | External media: direct URL        | Add link…; every viewer streams it with libmpv                                          | ✅     |
-| 12.14 | Mixed playlists                   | Local and link items mixed; YouTube pending                                             | 🟨    |
+| 12.14 | Mixed playlists                   | Local files, links and YouTube in one playlist                                          | ✅     |
 | 12.15 | Auto-distribute external items    | External items reach every viewer automatically                                         | ✅     |
 | 12.16 | Resume position                   | Saved every 5 s per file (local); used when playing outside a screen                    | ✅     |
 

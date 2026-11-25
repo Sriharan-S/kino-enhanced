@@ -99,6 +99,8 @@ interface ScreenState {
   holdIgnored: string[];
   ready: ReadyCheck | null;
   readySeq: number;
+  /** Viewers (keys) whose player reached the end of the current YouTube item. */
+  ended: string[];
 }
 
 /** Per-connection data, kept on the socket so it survives hibernation. */
@@ -172,6 +174,7 @@ export class ScreenDO extends DurableObject<Env> {
       holdIgnored: [],
       ready: null,
       readySeq: 0,
+      ended: [],
     };
     await this.save();
     await this.scheduleAlarm();
@@ -406,6 +409,14 @@ export class ScreenDO extends DurableObject<Env> {
         if (changed) this.broadcastViewers();
         await this.checkHold();
         return;
+      }
+
+      case "item.ended": {
+        // YouTube: advance only when everyone has finished (§14.13). The host can skip ahead anyway.
+        if (s.item?.id !== msg.data.id || s.item.kind !== "youtube") return;
+        if (!s.ended.includes(me.key)) s.ended = [...s.ended, me.key];
+        await this.save();
+        return this.checkAllEnded();
       }
 
       case "hold.release":
@@ -814,6 +825,14 @@ export class ScreenDO extends DurableObject<Env> {
     return key;
   }
 
+  /** Everyone connected has reached the end of the current YouTube item: move on. */
+  private async checkAllEnded(): Promise<void> {
+    const s = this.state!;
+    if (s.item?.kind !== "youtube" || s.ended.length === 0) return;
+    const online = this.online().map(([, a]) => a.key);
+    if (online.length > 0 && online.every((k) => s.ended.includes(k))) await this.itemEnded();
+  }
+
   // ---- Buffering policy (§14.10) and ready check (§14.14)
 
   /** Under "wait for everyone": pause while someone buffers, resume with a scheduled start when all are ready. */
@@ -1050,6 +1069,7 @@ export class ScreenDO extends DurableObject<Env> {
     const s = this.state!;
     const now = Date.now();
     if (s.hold) await this.setHold(null);
+    s.ended = [];
     s.item = item;
     let a = A.load(s.anchor, item?.id ?? null, now);
     if (play && item) a = A.play(a, now, this.lead());
@@ -1066,7 +1086,7 @@ export class ScreenDO extends DurableObject<Env> {
     const s = this.state!;
     const next = P.neighbour(s.playlist, s.item?.id ?? null, 1);
     if (next && s.autoAdvance) return this.setCurrent(next, true);
-    const end = s.item?.duration ?? s.anchor.position;
+    const end = s.item?.duration ?? A.expectedPosition(s.anchor, Date.now());
     await this.setAnchor({ ...s.anchor, state: "paused", position: end, at: Date.now(), seq: s.anchor.seq + 1 });
   }
 
@@ -1098,6 +1118,7 @@ export class ScreenDO extends DurableObject<Env> {
     await this.updateLobby(ws);
     await this.checkHold();
     await this.finishReadyIfComplete();
+    await this.checkAllEnded();
   }
 
   /** Joined sockets, optionally excluding one that is closing. */
@@ -1239,6 +1260,7 @@ function normalise(s: ScreenState & { known?: Record<string, { name: string; dev
   s.holdIgnored ??= [];
   s.ready ??= null;
   s.readySeq ??= 0;
+  s.ended ??= [];
   s.failedPasswords ??= {};
   return s;
 }

@@ -78,6 +78,7 @@ Envelope: `{ "type": "<type>", "data": { ... } }`. Messages are limited to 16 Ki
 | `playlist.move` | `{ id, to }` | `playlist.reorder` | Moves the item to index `to`. |
 | `playlist.play` | `{ id }` | `playback.skip` | Jumps to that item and plays it from 0 (scheduled start). |
 | `skip` | `{ direction: "next"\|"previous" }` | `playback.skip` | Errors at either end; there is no wrap-around. |
+| `item.ended` | `{ id }` | joined | Your player reached the end of the current **YouTube** item. The screen moves on once everyone present has sent it (or the host skips). Ignored for other kinds. |
 | `reanchor` | `{ position, at }` | timeline authority | The host, or the acting host while the host is away. Real position at theatre time `at` (clamped to ±2 s). |
 | `roles.create` | `{ name, colour, permissions, position? }` | `roles.manage` | New role ranked below your own (default: just above the highest role you can manage). |
 | `roles.update` | `{ id, name?, colour?, permissions?, position? }` | `roles.manage` | Roles below your own. Co-host is fixed; for Viewer only `permissions` can change. |
@@ -141,7 +142,8 @@ ViewerInfo = { id: string, name: string, device: Device|null, isHost: boolean, r
 ReadyCheck = { id: number, by: string, deadline: number, answers: { [viewerId]: boolean }, done: boolean }
 ScreenInfo = { code: string, name: string, visibility: "public"|"private", hidden: boolean, maxViewers: number, showDevices: boolean,
                autoAdvance: boolean, bufferingPolicy: "keep"|"wait" }
-NewItem    = { kind: "local"|"url", name: string, duration: number|null, url?: string }   // local: file name only, never a path
+NewItem    = { kind: "local"|"url"|"youtube", name: string, duration: number|null, url?: string }   // local: file name only, never a path
+// youtube: any YouTube video link or id; stored as https://www.youtube.com/watch?v=<id>. Needs playlist.add_external.
 SubMeta    = { id: string, itemId: string, name: string, format: "srt"|"vtt"|"ass"|"ssa", size: number, from: string, fromName: string }
 ChatMessage = { id: number, at: number, kind: "text"|"gif"|"system", from: string|null, name: string|null,
                 text: string|null, gif: { url, width, height, title }|null }

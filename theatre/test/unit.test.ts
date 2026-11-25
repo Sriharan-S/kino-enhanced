@@ -100,3 +100,26 @@ describe("protocol", () => {
     expect(m.type === "hello" && m.data.name).toBe("Alice B");
   });
 });
+
+import { youtubeUrl } from "../src/protocol";
+
+describe("YouTube links", () => {
+  it("normalises watch, short, embed and youtu.be links and bare ids", () => {
+    const canon = "https://www.youtube.com/watch?v=aqz-KE-bpKQ";
+    for (const link of [
+      "https://www.youtube.com/watch?v=aqz-KE-bpKQ",
+      "https://youtube.com/watch?feature=share&v=aqz-KE-bpKQ&t=30",
+      "https://m.youtube.com/watch?v=aqz-KE-bpKQ",
+      "https://youtu.be/aqz-KE-bpKQ?t=12",
+      "https://www.youtube.com/shorts/aqz-KE-bpKQ",
+      "https://www.youtube.com/embed/aqz-KE-bpKQ",
+      "aqz-KE-bpKQ",
+    ]) expect(youtubeUrl(link)).toBe(canon);
+  });
+
+  it("rejects other sites and malformed ids", () => {
+    expect(youtubeUrl("https://evil.example/watch?v=aqz-KE-bpKQ")).toBeNull();
+    expect(youtubeUrl("http://www.youtube.com/watch?v=aqz-KE-bpKQ")).toBeNull();
+    expect(youtubeUrl("https://www.youtube.com/watch?v=short")).toBeNull();
+  });
+});

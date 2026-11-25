@@ -51,3 +51,10 @@ describe("item end time (auto-advance)", () => {
     expect(P.endsAt(playing(150, 5_000), item("i1", 100))).toBe(5_000);
   });
 });
+
+describe("YouTube items", () => {
+  it("never get a scheduled end (everyone reports it instead)", () => {
+    const yt: Item = { id: "i1", kind: "youtube", name: "Trailer", duration: 120, url: "https://www.youtube.com/watch?v=aqz-KE-bpKQ" };
+    expect(P.endsAt({ itemId: "i1", state: "playing", position: 0, rate: 1, at: 0, seq: 1 }, yt)).toBeNull();
+  });
+});

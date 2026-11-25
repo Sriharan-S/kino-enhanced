@@ -38,7 +38,7 @@ export interface Anchor {
 
 export interface Item {
   id: string;
-  kind: "local" | "url";
+  kind: "local" | "url" | "youtube";
   name: string;
   /** Seconds; null if unknown. Used for the mismatch check. */
   duration: number | null;
@@ -98,7 +98,7 @@ export interface ScreenInfo {
 
 /** A playlist item before the theatre assigns its id. Local files share only name and duration (§13.2). */
 export interface NewItem {
-  kind: "local" | "url";
+  kind: "local" | "url" | "youtube";
   name: string;
   duration: number | null;
   url?: string;
@@ -158,6 +158,7 @@ export type ClientMessage =
   | { type: "react"; data: { emoji: Reaction } }
   | { type: "subs.unshare"; data: { id: string } }
   | { type: "status"; data: { value: ViewerStatus } }
+  | { type: "item.ended"; data: { id: string } }
   | { type: "hold.release"; data: Record<string, never> }
   | { type: "ready.start"; data: Record<string, never> }
   | { type: "ready.answer"; data: { id: number; ready: boolean } };
@@ -278,8 +279,22 @@ function itemId(v: unknown): string {
   return v;
 }
 
+/** Canonical watch URL for a YouTube link or bare 11-character video id, or null. */
+export function youtubeUrl(v: string): string | null {
+  const id = /^[A-Za-z0-9_-]{11}$/.test(v)
+    ? v
+    : (/^https:\/\/(?:www\.|m\.|music\.)?(?:youtube\.com\/(?:watch\?(?:.*&)?v=|shorts\/|embed\/|live\/)|youtu\.be\/)([A-Za-z0-9_-]{11})(?:[?&#/].*)?$/.exec(v)?.[1] ?? null);
+  return id ? `https://www.youtube.com/watch?v=${id}` : null;
+}
+
 function newItem(d: Record<string, unknown>): NewItem {
-  if (d.kind !== "local" && d.kind !== "url") throw new ProtocolError("bad_request", "kind must be local or url");
+  if (d.kind === "youtube") {
+    const url = youtubeUrl(str(d.url, "url", LIMITS.url));
+    if (!url) throw new ProtocolError("bad_request", "not a YouTube video link");
+    const duration = d.duration === null || d.duration === undefined ? null : num(d.duration, "duration", 0, 1e7);
+    return { kind: "youtube", name: cleanName(d.name, "name", LIMITS.itemName), duration, url };
+  }
+  if (d.kind !== "local" && d.kind !== "url") throw new ProtocolError("bad_request", "kind must be local, url or youtube");
   const duration = d.duration === null || d.duration === undefined ? null : num(d.duration, "duration", 0, 1e7);
   const url = d.kind === "url" ? str(d.url, "url", LIMITS.url) : undefined;
   if (url !== undefined && !/^https?:\/\//i.test(url)) throw new ProtocolError("bad_request", "url must be http(s)");
@@ -357,6 +372,8 @@ export function parseClientMessage(raw: string | ArrayBuffer): ClientMessage {
         },
       };
     }
+    case "item.ended":
+      return { type: "item.ended", data: { id: itemId(d.id) } };
     case "status":
       if (!VIEWER_STATUSES.includes(d.value as ViewerStatus)) throw new ProtocolError("bad_request", "unknown status");
       return { type: "status", data: { value: d.value as ViewerStatus } };

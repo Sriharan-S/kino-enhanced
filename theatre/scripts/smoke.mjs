@@ -348,6 +348,26 @@ assert.match((await eve.next("error")).message, /muted/);
 frank.close();
 step(`history (${history.length} messages incl. joins, roles, now playing) reaches late joiners; muted viewers can't chat`);
 
+// --- YouTube items (§14.13): everyone must finish before the screen moves on
+eve.send("playlist.add", { items: [{ kind: "youtube", name: "Trailer", duration: null, url: "https://youtu.be/aqz-KE-bpKQ" }] });
+assert.equal((await eve.next("error")).code, "forbidden"); // playlist.add_external
+host2.send("playlist.add", { items: [{ kind: "youtube", name: "Trailer", duration: null, url: "https://youtu.be/aqz-KE-bpKQ?t=5" }], at: 0 });
+const ytList = await eve.next("playlist", (l) => l.some((i) => i.kind === "youtube"));
+const yt = ytList.find((i) => i.kind === "youtube");
+assert.equal(yt.url, "https://www.youtube.com/watch?v=aqz-KE-bpKQ");
+host2.send("playlist.add", { items: [{ kind: "youtube", name: "Bad", duration: null, url: "https://evil.example/x" }] });
+assert.equal((await host2.next("error")).code, "bad_request");
+host2.send("settings.update", { autoAdvance: true });
+host2.send("playlist.play", { id: yt.id });
+await eve.next("anchor", (a) => a.itemId === yt.id && a.state === "playing");
+for (const c of [host2, carol]) c.send("item.ended", { id: yt.id });
+await new Promise((r) => setTimeout(r, 500));
+assert.equal((await http("GET", `/resolve/${recoded.code}`)).status, 200);
+eve.send("item.ended", { id: yt.id }); // the last one present
+const afterYt = await eve.next("anchor", (a) => a.itemId !== yt.id && a.state === "playing");
+assert.ok(afterYt.itemId, "moved on to the next item once everyone finished");
+step("YouTube: link normalised, add_external needed, and the screen waits for everyone to finish");
+
 // --- viewer sync status (§12), "wait for everyone" (§14.10), ready check (§14.14)
 const eveId = eveWelcome.self.id;
 host2.send("viewer.mute", { viewer: eveId, muted: false });

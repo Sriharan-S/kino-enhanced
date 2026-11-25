@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Kino YouTube player</title>
+  <style>
+    html, body { margin: 0; height: 100%; background: #000; overflow: hidden; }
+    #player { width: 100%; height: 100%; }
+  </style>
+</head>
+<body>
+  <div id="player"></div>
+  <script>
+    // Hosted inside the Kino app's WebView2 (official YouTube IFrame Player API, spec §13.6).
+    // It only talks to the app through chrome.webview; in a normal browser it does nothing.
+    "use strict";
+    const host = window.chrome && window.chrome.webview;
+    const post = (m) => host && host.postMessage(m);
+    let player = null;
+    let ready = false;
+
+    window.onYouTubeIframeAPIReady = function () {
+      if (!host) return;
+      player = new YT.Player("player", {
+        width: "100%",
+        height: "100%",
+        playerVars: { controls: 0, disablekb: 1, rel: 0, playsinline: 1, fs: 0, iv_load_policy: 3, modestbranding: 1 },
+        events: {
+          onReady: () => { ready = true; post({ type: "ready" }); },
+          onStateChange: (e) => post({ type: "state", state: e.data }),
+          onError: (e) => post({ type: "error", code: e.data }),
+        },
+      });
+    };
+
+    // Position reports for the sync engine (it extrapolates between them).
+    setInterval(() => {
+      if (!ready || !player.getCurrentTime) return;
+      post({ type: "time", t: player.getCurrentTime(), d: player.getDuration(), s: player.getPlayerState() });
+    }, 200);
+
+    if (host) {
+      host.addEventListener("message", (ev) => {
+        const c = ev.data || {};
+        if (!ready) return;
+        switch (c.cmd) {
+          case "load": player.cueVideoById({ videoId: String(c.id), startSeconds: Number(c.at) || 0 }); break;
+          case "play": player.playVideo(); break;
+          case "pause": player.pauseVideo(); break;
+          case "seek": player.seekTo(Number(c.t) || 0, true); break;
+          case "volume": player.setVolume(Math.max(0, Math.min(100, Number(c.v) || 0))); break;
+          case "mute": c.on ? player.mute() : player.unMute(); break;
+          case "stop": player.stopVideo(); break;
+        }
+      });
+    }
+  </script>
+  <script src="https://www.youtube.com/iframe_api"></script>
+</body>
+</html>
