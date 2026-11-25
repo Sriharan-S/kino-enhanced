@@ -60,9 +60,9 @@ Tasks are worked through in order and checked off as they are completed. Windows
 | #     | Task                              | Details                                                                                 | Status |
 | ----- | --------------------------------- | --------------------------------------------------------------------------------------- | ------ |
 | 1.1   | Worker project scaffold           | TypeScript Worker in `theatre/`; runs locally with `wrangler dev`                       | ✅     |
-| 1.2   | Multi-account deployment          | Deploy the same Worker to several accounts; per-account config                          | ⬜     |
-| 1.3   | Unique theatre naming             | Each theatre has a unique id and name                                                   | ⬜     |
-| 1.4   | Dynamic theatre list              | `servers.json` on Cloudflare Pages, with cached and bundled fallbacks                   | ⬜     |
+| 1.2   | Multi-account deployment          | `npm run deploy -- <id> <Name>` per account; Aurora live; more accounts pending         | 🟨    |
+| 1.3   | Unique theatre naming             | Sky & stars names; id/name set per deployment; Aurora is the first                      | ✅     |
+| 1.4   | Dynamic theatre list              | Live `servers.json`, then cached copy, then bundled list (Windows)                      | ✅     |
 | 1.5   | `/info` endpoint                  | Name, protocol version, status; also used as the latency probe                          | ✅     |
 | 1.6   | Real-time connection layer        | WebSockets to one Durable Object per screen, using the Hibernation API                  | ✅     |
 | 1.7   | Screen state storage              | Durable Object storage (SQLite-backed, free tier)                                       | ✅     |
@@ -137,12 +137,12 @@ Tasks are worked through in order and checked off as they are completed. Windows
 | 7.1   | Unified lobby screen              | Screens from **all** theatres in one list, with no dropdown                             | ⬜     |
 | 7.2   | Parallel fetch across theatres    | `GET /lobby` per theatre done; client-side parallel merge pending                       | 🟨    |
 | 7.3   | Theatre badge per screen          | Each listed screen shows its theatre                                                    | ⬜     |
-| 7.4   | Theatre latency indicator         | Ping to each theatre                                                                    | ⬜     |
+| 7.4   | Theatre latency indicator         | Ping per theatre shown in the theatre picker; lobby pending                             | 🟨    |
 | 7.5   | Public screens                    | Always listed; anyone can join                                                          | ⬜     |
 | 7.6   | Private screens                   | Password-protected                                                                      | ⬜     |
 | 7.7   | "Hide from lobby" toggle          | Only for private screens                                                                | ⬜     |
 | 7.8   | Refresh                           | Manual refresh plus 15 s auto-refresh                                                   | ⬜     |
-| 7.9   | Partial results                   | Down or slow theatres don't block the list                                              | ⬜     |
+| 7.9   | Partial results                   | 4 s per-theatre timeout for ping and code lookup; lobby pending                         | 🟨    |
 | 7.10  | Sort & filter                     | By viewers, latency, name, privacy, theatre                                             | ⬜     |
 
 ### 8. Invites
@@ -151,7 +151,7 @@ Tasks are worked through in order and checked off as they are completed. Windows
 | ----- | --------------------------------- | --------------------------------------------------------------------------------------- | ------ |
 | 8.1   | Screen code                       | 6-char code, separate from the hidden ID                                                | ✅     |
 | 8.2   | Invite link                       | `kino://join/<theatre>/<code>` plus a web link                                          | ⬜     |
-| 8.3   | Join by code                      | `/resolve/<code>` done; querying all theatres in parallel pending                       | 🟨    |
+| 8.3   | Join by code                      | Code looked up on all theatres in parallel; down theatres skipped                       | ✅     |
 | 8.4   | Private join                      | Code plus password; wrong password rejected                                             | ✅     |
 | 8.5   | Password security                 | PBKDF2-SHA256 hashing done; attempt limiting pending                                    | 🟨    |
 | 8.6   | Regenerate code                   | Old code and link stop working                                                          | ⬜     |
@@ -272,7 +272,7 @@ Tasks are worked through in order and checked off as they are completed. Windows
 | #     | Task                             | Details                                                                                 | Status |
 | ----- | -------------------------------- | --------------------------------------------------------------------------------------- | ------ |
 | 17.1  | Windows build                    | Installer and/or portable build                                                         | ⬜     |
-| 17.2  | `servers.json` on Cloudflare Pages | Theatre list hosting                                                                  | ⬜     |
+| 17.2  | `servers.json` on Cloudflare Pages | Static-assets Worker `kino-directory` (Pages now deploys as Workers)                  | ✅     |
 | 17.3  | Linux build                      | AppImage / deb                                                                          | ⏸     |
 | 17.4  | Android build                    | APK                                                                                     | ⏸     |
 | 17.5  | Web build & hosting              | Cloudflare Pages                                                                        | ⏸     |

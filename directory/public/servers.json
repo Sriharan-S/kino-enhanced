@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "theatres": [
+    { "id": "aurora", "name": "Aurora", "url": "https://kino-aurora.srie.workers.dev" }
+  ]
+}

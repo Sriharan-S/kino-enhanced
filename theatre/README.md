@@ -25,12 +25,19 @@ npm run smoke      # end-to-end checks against the running dev server
 
 ## Deploy a theatre
 
-Each Cloudflare account hosts one theatre. Give each one a unique id and name:
+Each Cloudflare account hosts one theatre, which spreads the free-tier limits. Theatres are named after the sky
+(Aurora, Nova, Orion, Lyra, Vega, Polaris…). Each needs a unique id and name:
 
 ```bash
-npx wrangler login                       # once per Cloudflare account
-npx wrangler deploy --name kino-aurora \
-  --var THEATRE_ID:aurora --var THEATRE_NAME:Aurora
+npx wrangler login                    # once per Cloudflare account
+npm run deploy -- aurora Aurora       # deploys Worker kino-aurora with THEATRE_ID/THEATRE_NAME set
+npm run smoke -- https://kino-aurora.<account>.workers.dev
 ```
 
-Then add it to `servers.json`, the client theatre list (README TODO 1.4 / 17.2).
+Behind a TLS-inspecting proxy (e.g. Zscaler), Wrangler needs `NODE_USE_SYSTEM_CA=1`. The deploy script sets it for you.
+
+Then add the theatre to [`../directory/public/servers.json`](../directory) and redeploy the directory.
+
+| Theatre | URL |
+|---|---|
+| Aurora | https://kino-aurora.srie.workers.dev |

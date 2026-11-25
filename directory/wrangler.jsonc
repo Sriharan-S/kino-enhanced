@@ -1,0 +1,8 @@
+// Theatre directory: a static-assets-only Worker that serves servers.json.
+// Static asset requests are free and unlimited on the Workers free plan.
+{
+  "$schema": "../theatre/node_modules/wrangler/config-schema.json",
+  "name": "kino-directory",
+  "compatibility_date": "2026-11-01",
+  "assets": { "directory": "./public" }
+}
