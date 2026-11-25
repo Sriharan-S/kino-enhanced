@@ -123,26 +123,26 @@ Counts every row in the phase tables (sub-tasks included); "—" rows are left o
 | 2 | ✅ 4 · ⬜ 1 | ✅ 2 · 🟨 1 | ✅ 2 · ⬜ 1 | ⏸ 3 | ⏸ 3 |
 | 3 | ✅ 6 · ⬜ 1 | ✅ 6 · 🟨 3 | ✅ 8 · 🟨 1 | ⏸ 9 | ⏸ 9 |
 | 4 | ✅ 4 · ⬜ 1 | ✅ 9 · 🟨 3 · ⬜ 1 | ✅ 8 · 🟨 4 · ⬜ 1 | ⏸ 13 | ⏸ 13 |
-| 5 | ✅ 22 · 🟨 3 | ✅ 19 · 🟨 3 | ✅ 13 · 🟨 9 | ⏸ 22 | ⏸ 22 |
+| 5 | ✅ 22 · 🟨 3 | ✅ 19 · 🟨 3 | ✅ 20 · 🟨 2 | ⏸ 22 | ⏸ 22 |
 | 6 | ✅ 7 · ⬜ 1 | ✅ 6 · 🟨 2 · ⬜ 1 | ✅ 5 · 🟨 3 · ⬜ 1 | ⏸ 9 | ⏸ 9 |
 | 7 | ✅ 8 | ✅ 6 | 🟨 6 | ⏸ 6 | ⏸ 6 |
 | 8 | ✅ 12 | ✅ 11 · 🟨 2 | ✅ 3 · 🟨 10 | ⏸ 13 | ⏸ 13 |
-| 9 | ✅ 4 | ✅ 5 | ✅ 1 · 🟨 4 | ⏸ 5 | ⏸ 5 |
+| 9 | ✅ 4 | ✅ 5 | ✅ 2 · 🟨 3 | ⏸ 5 | ⏸ 5 |
 | 10 | ✅ 6 | ✅ 10 · 🟨 1 | ✅ 8 · 🟨 3 | ⏸ 11 | ⏸ 11 |
-| 11 | ✅ 14 · ⬜ 1 | ✅ 25 · 🟨 1 · ⬜ 2 | ✅ 20 · 🟨 6 · ⬜ 2 | ⏸ 28 | ⏸ 28 |
+| 11 | ✅ 14 · ⬜ 1 | ✅ 25 · 🟨 1 · ⬜ 2 | ✅ 21 · 🟨 5 · ⬜ 2 | ⏸ 28 | ⏸ 28 |
 | 12 | — | ✅ 4 · 🟨 4 · ⬜ 2 | ✅ 6 · 🟨 1 · ⬜ 4 | ⏸ 11 | ⏸ 10 |
 | 13 | ✅ 7 | ✅ 19 · 🟨 2 · ⬜ 1 | ✅ 15 · 🟨 4 · ⬜ 3 | ⏸ 22 | ⏸ 22 |
-| 14 | ✅ 4 · ⬜ 1 | ✅ 8 · ⬜ 1 | ✅ 2 · 🟨 2 · ⬜ 5 | ⏸ 9 | ⏸ 9 |
+| 14 | ✅ 4 · ⬜ 1 | ✅ 8 · ⬜ 2 | ✅ 2 · 🟨 3 · ⬜ 5 | ⏸ 10 | ⏸ 10 |
 | 15 | — | ✅ 1 · 🟨 1 | 🟨 1 · ⬜ 3 | ⏸ 2 | ⏸ 2 |
 | 16 | ✅ 1 | ✅ 7 | ✅ 2 · ⬜ 5 | ⏸ 7 | ⏸ 7 |
 | 17 | ✅ 6 | ✅ 8 · 🟨 3 · ⬜ 1 | 🟨 2 · ⬜ 9 | ⏸ 12 | ⏸ 12 |
-| 18 | ✅ 7 | ✅ 9 | ✅ 8 · 🟨 1 | ⏸ 9 | ⏸ 9 |
-| 19 | ✅ 1 | ✅ 2 · 🟨 5 | ✅ 7 | ⏸ 7 | ⏸ 7 |
+| 18 | ✅ 7 | ✅ 9 | ✅ 9 | ⏸ 9 | ⏸ 9 |
+| 19 | ✅ 1 | ✅ 2 · 🟨 6 | ✅ 7 · 🟨 1 | ⏸ 8 | ⏸ 8 |
 | 20 | ✅ 3 | ✅ 4 · 🟨 2 | ✅ 2 · 🟨 1 · ⬜ 2 | ⏸ 6 | ⏸ 6 |
 | 21 | ✅ 1 · ⬜ 13 | ✅ 1 · 🟨 1 · ⬜ 14 | ✅ 3 · 🟨 1 · ⬜ 13 | ⏸ 14 | ⏸ 14 |
 | 22 | ⏸ 4 | ⏸ 3 | ⏸ 3 | ⏸ 3 | ⏸ 3 |
 | 23 | ⬜ 23 | ⬜ 26 | ⬜ 28 | ⬜ 27 | ⬜ 26 |
-| **All** | **✅ 137 · 🟨 4 · ⬜ 45 · ⏸ 4** | **✅ 169 · 🟨 34 · ⬜ 49 · ⏸ 3** | **✅ 118 · 🟨 60 · ⬜ 78 · ⏸ 3** | **⬜ 27 · ⏸ 228** | **⬜ 26 · ⏸ 227** |
+| **All** | **✅ 137 · 🟨 4 · ⬜ 45 · ⏸ 4** | **✅ 169 · 🟨 35 · ⬜ 50 · ⏸ 3** | **✅ 128 · 🟨 52 · ⬜ 78 · ⏸ 3** | **⬜ 27 · ⏸ 230** | **⬜ 26 · ⏸ 229** |
 
 ---
 
@@ -619,14 +619,14 @@ enforces capacity (`full`) for joins by code; the owner is never refused for cap
 | C-5.8 | Leave frees the seat at once | §6.4, R2.6 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Th smoke; Win live; Web e2e |
 | C-5.9 | 60 s reconnect grace, shown to others | §6.4, R2.6 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Th smoke (optional 65 s step); clients UI: manual |
 | C-5.10 | Capacity, with seats held for reconnecting viewers | §6.4, R2.9 | 🟨 | — | — | — | — | Implemented; no automated test of `full` or of held seats |
-| C-5.11 | Screen settings | §6.3, R2.10 | ✅ | 🟨 | 🟨 | ⏸ | ⏸ | Th smoke. Web: Settings dialog sends only changed fields, follows `screen`, read-only without permission (unit + browser test); by-hand check pending |
-| C-5.11.1 | Rename the screen | §6.3 | ✅ | 🟨 | 🟨 | ⏸ | ⏸ | Win: "needs a name" error is shown in a hidden overlay. Web: browser test (rename reaches the viewer); by-hand check pending |
-| C-5.11.2 | Visibility and password | §6.3 | ✅ | 🟨 | 🟨 | ⏸ | ⏸ | Win: "Set a password" error is shown in a hidden overlay. Web: unit (password rules); by-hand check pending |
-| C-5.11.3 | Hide from lobby | §6.3 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Web: only offered when private (unit); by-hand check pending |
-| C-5.11.4 | Max viewers | §6.3 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Web: 2–25, validated (unit, browser test); by-hand check pending |
-| C-5.11.5 | Show devices | §6.3, R9.3 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Web: unit; by-hand check pending |
+| C-5.11 | Screen settings | §6.3, R2.10 | ✅ | 🟨 | ✅ | ⏸ | ⏸ | Th smoke. Web: Settings dialog sends only changed fields, follows `screen`, read-only without permission (unit + browser test) |
+| C-5.11.1 | Rename the screen | §6.3 | ✅ | 🟨 | ✅ | ⏸ | ⏸ | Win: "needs a name" error is shown in a hidden overlay. Web: browser test (rename reaches the viewer) |
+| C-5.11.2 | Visibility and password | §6.3 | ✅ | 🟨 | ✅ | ⏸ | ⏸ | Win: "Set a password" error is shown in a hidden overlay. Web: unit (password rules) |
+| C-5.11.3 | Hide from lobby | §6.3 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Web: only offered when private (unit) |
+| C-5.11.4 | Max viewers | §6.3 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Web: 2–25, validated (unit, browser test) |
+| C-5.11.5 | Show devices | §6.3, R9.3 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Web: unit |
 | C-5.11.6 | Auto-advance | §6.3 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Th smoke |
-| C-5.11.7 | Buffering policy | §6.3, §14.10 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th smoke. Web: Keep playing / Wait for everyone (unit); by-hand check pending |
+| C-5.11.7 | Buffering policy | §6.3, §14.10 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Th smoke. Web: Keep playing / Wait for everyone (unit) |
 | C-5.12 | Lifecycle timers | §6.5, R2.11, R4.5 | 🟨 | — | — | — | — | Implemented; the 5 and 15 minute closes have no automated test |
 | C-5.13 | Close the screen | §6.5, R2.11 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th smoke. Web: see sub-tasks; by-hand check pending |
 | C-5.13.1 | Host closes, with confirmation | §6.5 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Web: "Close screen…" in Settings for the host only (not the acting host), asks "Close the screen for everyone?" (browser test); by-hand check pending |
@@ -954,7 +954,7 @@ readable (a dot or bar, not coloured text on its own; see C-23.3.1).
 
 | ID | Task | § | Th | Win | Web | And | Lin | Tests / notes |
 |---|---|---|---|---|---|---|---|---|
-| C-9.1 | Chat mute and unmute | §9, R6.3 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th smoke (muted can't chat). Web: menu action; the muted viewer's input says why; icon for everyone (browser test); by-hand check pending |
+| C-9.1 | Chat mute and unmute | §9, R6.3 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Th smoke (muted can't chat). Web: menu action; the muted viewer's input says why; icon for everyone (browser test) |
 | C-9.2 | Kick | §9, R6.1 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th smoke; Win live. Web: back to the lobby with "You were removed from the screen.", can rejoin (browser test); by-hand check pending |
 | C-9.3 | Ban | §9, R6.2 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th smoke. Web: asks "Ban X from this screen? They can't come back."; removed, and rejoining is refused (browser test); by-hand check pending |
 | C-9.4 | Viewer actions menu, filtered by rank and permission | §8.2, §8.5 | — | ✅ | 🟨 | ⏸ | ⏸ | Win UI: manual. Web: ⋯ menu per viewer with only the allowed actions, "No actions available" otherwise, never for yourself (unit, browser test); by-hand check pending |
@@ -1080,7 +1080,7 @@ same tests.
 | C-11.19.3 | Live tally | §14.14 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Web: "n of m ready" among connected viewers (unit, browser test); by-hand check pending |
 | C-11.19.4 | 30 s countdown | §14.14 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Web: seconds left from the theatre's deadline (browser test); by-hand check pending |
 | C-11.19.5 | Result shown | §14.14 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Web: "Everyone is ready" or "Ready check: n of m ready" for 5 s, and in chat (browser test); by-hand check pending |
-| C-11.20 | Personal sync offset | §14.15, R11.15 | — | ✅ | 🟨 | ⏸ | ⏸ | Win unit. Web: ⏱ control in the player bar, −2000 to +2000 ms, local only, remembered (browser test); by-hand check pending |
+| C-11.20 | Personal sync offset | §14.15, R11.15 | — | ✅ | ✅ | ⏸ | ⏸ | Win unit. Web: ⏱ control in the player bar, −2000 to +2000 ms, local only, remembered (browser test) |
 | C-11.21 | Sync readout for the viewer | §14 | — | ✅ | ✅ | ⏸ | ⏸ | Zone, drift, rate. UI: manual |
 | C-11.22 | Shared sync test vectors across engines | §14 | ⬜ | ⬜ | ⬜ | ⏸ | ⏸ | Today the tests are ported by hand |
 | C-11.23 | Sleep, lock and background behaviour | §14.11 | — | 🟨 | ✅ | ⏸ | ⏸ | Win: recovers through reconnect; not tested. Web: the engine ticks from a dedicated worker (not throttled in background tabs); a tick gap over 3 s runs a full clock burst (live test); 30 minutes hidden checked by hand |
@@ -1224,7 +1224,7 @@ Acceptance criteria:
 | C-12.4 | Seek bar with hover preview time | §15.4 | — | ⬜ | ⬜ | ⏸ | ⏸ | Win sets `IsThumbToolTipEnabled="False"`; Web uses a plain range input |
 | C-12.5 | Audio track selection | §15.2, R10.4 | — | ✅ | ⬜ | ⏸ | ⏸ | Web: browsers expose audio tracks only in Safari (WEB-12.P4) |
 | C-12.6 | Fullscreen | §15.4, R10.5 | — | ✅ | ✅ | ⏸ | ⏸ | UI: manual |
-| C-12.7 | Keyboard shortcuts | §15.4, R10.6 | — | 🟨 | 🟨 | ⏸ | ⏸ | Win: a focused slider takes the arrow keys, nothing works while the YouTube view has focus, and seeking reads libmpv's position during YouTube items. Web: no ↑/↓, N, P or Home |
+| C-12.7 | Keyboard shortcuts | §15.4, R10.6 | — | 🟨 | 🟨 | ⏸ | ⏸ | Win: a focused slider takes the arrow keys, nothing works while the YouTube view has focus, and seeking reads libmpv's position during YouTube items. Web: no ↑/↓, N, P or Home; a double-click on the picture is fullscreen only, and Space on a focused button presses only that button (e2e) |
 | C-12.8 | Touch gestures | §15.4 | — | — | ⬜ | ⏸ | — | Web: phones and tablets |
 | C-12.9 | Buffering and end-of-file detection | §15.2, §15.3 | — | 🟨 | ✅ | ⏸ | ⏸ | Win: only `paused-for-cache` (spec also lists `core-idle` and `seeking`) |
 | C-12.10 | System media controls go through the screen | — | — | ⬜ | ✅ | ⏸ | ⏸ | Web: Media Session routes play, pause, next, previous and seeks through the screen with permissions; browser test checks the metadata; media keys checked by hand |
@@ -1420,6 +1420,13 @@ a file opened before creating a screen becomes its first item.
 | C-14.8 | End of a YouTube item: wait for everyone, host can skip | §14.13 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th smoke. Web: can't play YouTube yet (C-14.5), so it sends `item.ended` at once and tells the viewer; it never blocks the screen (live test, and the browser test moves past a YouTube item). ✅ once the web plays YouTube and sends `item.ended` at the real end |
 | C-14.9 | YouTube titles | §13.6 | — | ✅ | ⬜ | ⏸ | ⏸ | Win: oEmbed. Web: names items "YouTube {id}" |
 | C-14.10 | YouTube errors explained | §15.5 | — | ✅ | ⬜ | ⏸ | ⏸ | Embedding disabled, private, removed |
+| C-14.11 | A link that won't play says why | §15.5 | — | ⬜ | 🟨 | ⏸ | ⏸ | Win: libmpv's "Can't play this file" in the overlay (C-19.4). Web: names a refusal ("The link answered 403…"), a web page, or a network error (unit, e2e); by-hand check pending |
+
+#### C-14.11 A link that won't play
+Acceptance criteria: when a link doesn't play, the message says which of these it is when the client can tell: the
+server refused it (with its status, e.g. 403 or 404), the link is a web page rather than a video file, or the network
+failed; otherwise it says the server may refuse it or the format isn't supported, never the format alone. A refused
+link is a common sight on networks with a filtering proxy.
 
 #### C-14.1 Add a link
 Acceptance criteria: one field accepts an http(s) link or a YouTube link or id (watch, shorts, embed, live, youtu.be,
@@ -1646,7 +1653,7 @@ videos" (§17.1).
 | C-18.4 | GIF search (GIPHY, key kept on the device) | §18, R16.4, R16.5 | — | ✅ | ✅ | ⏸ | ⏸ | Win unit. Web: unit (parse), browser test with `KINO_GIPHY_KEY` (not in CI); checked by hand |
 | C-18.5 | Pasted GIF links | §18, R16.4 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Th unit (allow list); Win unit. Web: unit and browser test; checked by hand |
 | C-18.6 | System messages | §18, R16.6 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Th smoke. Web: browser test; checked by hand |
-| C-18.7 | Chat permissions and muted state | §18, R16.7 | ✅ | ✅ | 🟨 | ⏸ | ⏸ | Th smoke. Web: permissions, mute ("You are muted in this screen.") and "Slow down a little" (browser test); mute by-hand check pending |
+| C-18.7 | Chat permissions and muted state | §18, R16.7 | ✅ | ✅ | ✅ | ⏸ | ⏸ | Th smoke. Web: permissions, mute ("You are muted in this screen.") and "Slow down a little" (browser test); mute checked by hand |
 
 #### C-18.1 Text chat
 Acceptance criteria: a Chat tab; messages up to 500 characters (newlines kept, control characters dropped; the client
@@ -1697,6 +1704,7 @@ Acceptance criteria: without `chat.send`, or when muted, the input is disabled w
 | C-19.5 | `update_required` tells people to update | §19.2 | — | ✅ | ✅ | ⏸ | ⏸ | |
 | C-19.6 | Form errors shown where the form is | — | — | 🟨 | ✅ | ⏸ | ⏸ | Win: settings-page errors go to a hidden overlay |
 | C-19.7 | Progress for slow actions | — | — | ✅ | ✅ | ⏸ | ⏸ | Connecting, joining, creating, reading files |
+| C-19.8 | Diagnostics log anyone can save | — | — | 🟨 | 🟨 | ⏸ | ⏸ | Win: `--synclog` launch flag (engine status every tick; no anchors or commands, no menu item). Web: "Download diagnostics" in Screen settings (unit, e2e); by-hand check pending |
 
 #### C-19.1 Error wording
 Acceptance criteria: each code in protocol §4.4 has client wording: `wrong_password` "Wrong password."; `full` "This
@@ -1724,6 +1732,12 @@ Acceptance criteria: the message offers the fix: Windows a link to the download 
 #### C-19.6 Form errors
 Acceptance criteria: create, join, settings and role forms show their errors next to the form (or the field), and keep
 what was typed.
+
+#### C-19.8 Diagnostics log
+Acceptance criteria: anyone in a screen, viewers too, can save a text log of what their device received (anchors,
+items, playlist, viewer statuses, errors), sent (commands), and did (clock syncs, sync zones, seeks, play, pause,
+speed steps, player events), with timestamps; it is kept on the device, never uploaded, holds no local file names, and
+keeps at least the last few thousand entries. Used to trace sync reports that can't be reproduced.
 
 #### C-19.7 Progress
 Acceptance criteria: creating, joining ("Looking for 7K3QXM…", "Joining {name}…"), connecting and reading files
