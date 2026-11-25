@@ -30,7 +30,7 @@ export function seek(a: Anchor, to: number, now: number, lead: number): Anchor {
   return { ...a, position: to, at: a.state === "playing" ? now + lead : now, seq: a.seq + 1 };
 }
 
-export function load(a: Anchor, itemId: string, now: number): Anchor {
+export function load(a: Anchor, itemId: string | null, now: number): Anchor {
   return { itemId, state: "paused", position: 0, rate: 1, at: now, seq: a.seq + 1 };
 }
 

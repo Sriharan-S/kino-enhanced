@@ -1,0 +1,1 @@
+{ "type": "playlist", "data": [ { "id": "i1", "kind": "local", "name": "EP 01.mkv", "duration": 1420.5 }, { "id": "i3", "kind": "url", "name": "Trailer", "duration": null, "url": "https://example.com/trailer.mp4" } ] }

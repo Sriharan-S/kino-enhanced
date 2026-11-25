@@ -1,1 +1,1 @@
-{"type":"settings.update","data":{"name":"Movie night 2","visibility":"private","password":"popcorn","hidden":false,"maxViewers":8,"showDevices":true}}
+{"type":"settings.update","data":{"name":"Movie night 2","visibility":"private","password":"popcorn","hidden":false,"maxViewers":8,"showDevices":true,"autoAdvance":false}}

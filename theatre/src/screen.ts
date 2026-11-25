@@ -14,11 +14,13 @@ import {
   type Device,
   type ErrorCode,
   type Item,
+  type NewItem,
   type ScreenInfo,
   type ServerMessage,
   type ViewerInfo,
   type Visibility,
 } from "./protocol";
+import * as P from "./playlist";
 import * as R from "./rbac";
 
 /** How long an empty screen survives before it is closed (reconnect window). */
@@ -64,6 +66,9 @@ interface ScreenState {
   /** Co-host keys in priority order (§7.1). */
   coHosts: string[];
   bans: string[];
+  playlist: Item[];
+  autoAdvance: boolean;
+  /** The current item (also in `playlist`, unless it was removed). */
   item: Item | null;
   itemSeq: number;
   anchor: Anchor;
@@ -119,6 +124,8 @@ export class ScreenDO extends DurableObject<Env> {
       roleSeq: 0,
       coHosts: [],
       bans: [],
+      playlist: [],
+      autoAdvance: true,
       item: null,
       itemSeq: 0,
       anchor: A.initialAnchor(now),
@@ -195,6 +202,10 @@ export class ScreenDO extends DurableObject<Env> {
     }
     if (expired) this.broadcastViewers();
 
+    // Current item reached its end (host's duration is the reference): next item, or stop at the end.
+    const end = P.endsAt(s.anchor, s.item);
+    if (end !== null && now >= end - 50) await this.itemEnded();
+
     if (this.online().length === 0 && s.emptySince !== null && now >= s.emptySince + EMPTY_SCREEN_TTL_MS) {
       return this.closeScreen("screen closed");
     }
@@ -213,6 +224,8 @@ export class ScreenDO extends DurableObject<Env> {
     if (s.emptySince !== null) deadlines.push(s.emptySince + EMPTY_SCREEN_TTL_MS);
     if (s.controllersAbsentSince !== null) deadlines.push(s.controllersAbsentSince + HOST_ABSENT_TTL_MS);
     for (const since of Object.values(s.away)) deadlines.push(since + RECONNECT_GRACE_MS);
+    const end = P.endsAt(s.anchor, s.item);
+    if (end !== null) deadlines.push(end);
     if (deadlines.length) await this.ctx.storage.setAlarm(Math.min(...deadlines));
     else await this.ctx.storage.deleteAlarm();
   }
@@ -275,6 +288,7 @@ export class ScreenDO extends DurableObject<Env> {
         viewers: this.viewerList(),
         roles: s.roles,
         coHosts: this.coHostList(),
+        playlist: s.playlist,
         item: s.item,
         anchor: s.anchor,
         serverTime: Date.now(),
@@ -344,14 +358,58 @@ export class ScreenDO extends DurableObject<Env> {
         return this.setAnchor(A.reanchor(s.anchor, msg.data.position, msg.data.at, now));
 
       case "load": {
-        this.require(me, msg.data.kind === "url" ? "playlist.add_external" : "playlist.add");
-        const item: Item = { id: `i${++s.itemSeq}`, ...msg.data };
-        s.item = item;
-        s.anchor = A.load(s.anchor, item.id, now);
+        // Open now: insert after the current item and make it current (paused at 0).
+        this.requireAdd(me, [msg.data]);
+        const [item] = this.newItems([msg.data]);
+        s.playlist = P.insert(s.playlist, [item!], P.indexOf(s.playlist, s.item?.id ?? null) + 1);
+        this.broadcast({ type: "playlist", data: s.playlist });
+        return this.setCurrent(item!, false);
+      }
+
+      // ---- Playlist (§13)
+
+      case "playlist.add": {
+        this.requireAdd(me, msg.data.items);
+        const items = this.newItems(msg.data.items);
+        s.playlist = P.insert(s.playlist, items, msg.data.at);
         await this.save();
-        this.broadcast({ type: "item", data: item });
-        this.broadcast({ type: "anchor", data: s.anchor });
+        this.broadcast({ type: "playlist", data: s.playlist });
+        if (!s.item) return this.setCurrent(items[0]!, false); // first item becomes current
         return;
+      }
+
+      case "playlist.remove": {
+        this.require(me, "playlist.remove");
+        const before = s.playlist;
+        if (P.indexOf(before, msg.data.id) < 0) throw new ProtocolError("not_found", "no such item");
+        s.playlist = P.remove(before, msg.data.id);
+        await this.save();
+        this.broadcast({ type: "playlist", data: s.playlist });
+        if (s.item?.id === msg.data.id) return this.setCurrent(P.successorAfterRemoval(before, msg.data.id), s.anchor.state === "playing");
+        return;
+      }
+
+      case "playlist.move": {
+        this.require(me, "playlist.reorder");
+        if (P.indexOf(s.playlist, msg.data.id) < 0) throw new ProtocolError("not_found", "no such item");
+        s.playlist = P.move(s.playlist, msg.data.id, msg.data.to);
+        await this.save();
+        this.broadcast({ type: "playlist", data: s.playlist });
+        return;
+      }
+
+      case "playlist.play": {
+        this.require(me, "playback.skip");
+        const item = s.playlist.find((it) => it.id === msg.data.id);
+        if (!item) throw new ProtocolError("not_found", "no such item");
+        return this.setCurrent(item, true);
+      }
+
+      case "skip": {
+        this.require(me, "playback.skip");
+        const item = P.neighbour(s.playlist, s.item?.id ?? null, msg.data.direction === "next" ? 1 : -1);
+        if (!item) throw new ProtocolError("bad_request", msg.data.direction === "next" ? "this is the last item" : "this is the first item");
+        return this.setCurrent(item, s.anchor.state === "playing" || msg.data.direction === "next");
       }
 
       // ---- Roles
@@ -526,6 +584,7 @@ export class ScreenDO extends DurableObject<Env> {
         if (d.name !== undefined) s.name = d.name;
         if (d.maxViewers !== undefined) s.maxViewers = d.maxViewers;
         if (d.showDevices !== undefined) s.showDevices = d.showDevices;
+        if (d.autoAdvance !== undefined) s.autoAdvance = d.autoAdvance;
         if (d.visibility !== undefined || d.password !== undefined || d.hidden !== undefined) {
           const visibility = d.visibility ?? s.visibility;
           if (visibility === "private") {
@@ -685,6 +744,42 @@ export class ScreenDO extends DurableObject<Env> {
     s.anchor = next;
     await this.save();
     this.broadcast({ type: "anchor", data: next });
+    await this.scheduleAlarm(); // the item's end moves with the anchor
+  }
+
+  /** Makes `item` current at position 0, playing (scheduled start) or paused. */
+  private async setCurrent(item: Item | null, play: boolean): Promise<void> {
+    const s = this.state!;
+    const now = Date.now();
+    s.item = item;
+    let a = A.load(s.anchor, item?.id ?? null, now);
+    if (play && item) a = A.play(a, now, this.lead());
+    s.anchor = a;
+    await this.save();
+    this.broadcast({ type: "item", data: item });
+    this.broadcast({ type: "anchor", data: a });
+    await this.scheduleAlarm();
+  }
+
+  /** The current item ended: auto-advance, or stop exactly at the end. */
+  private async itemEnded(): Promise<void> {
+    const s = this.state!;
+    const next = P.neighbour(s.playlist, s.item?.id ?? null, 1);
+    if (next && s.autoAdvance) return this.setCurrent(next, true);
+    const end = s.item?.duration ?? s.anchor.position;
+    await this.setAnchor({ ...s.anchor, state: "paused", position: end, at: Date.now(), seq: s.anchor.seq + 1 });
+  }
+
+  private newItems(items: NewItem[]): Item[] {
+    const s = this.state!;
+    if (s.playlist.length + items.length > P.MAX_PLAYLIST) throw new ProtocolError("bad_request", `playlists hold at most ${P.MAX_PLAYLIST} items`);
+    return items.map((it) => ({ id: `i${++s.itemSeq}`, ...it }));
+  }
+
+  /** Local files need `playlist.add`; links need `playlist.add_external`. */
+  private requireAdd(me: Attachment, items: NewItem[]): void {
+    if (items.some((it) => it.kind === "local")) this.require(me, "playlist.add");
+    if (items.some((it) => it.kind !== "local")) this.require(me, "playlist.add_external");
   }
 
   private lead(): number {
@@ -753,7 +848,15 @@ export class ScreenDO extends DurableObject<Env> {
 
   private screenInfo(): ScreenInfo {
     const s = this.state!;
-    return { code: s.code, name: s.name, visibility: s.visibility, hidden: s.hidden, maxViewers: s.maxViewers, showDevices: s.showDevices };
+    return {
+      code: s.code,
+      name: s.name,
+      visibility: s.visibility,
+      hidden: s.hidden,
+      maxViewers: s.maxViewers,
+      showDevices: s.showDevices,
+      autoAdvance: s.autoAdvance,
+    };
   }
 
   private broadcastViewers(except?: WebSocket): void {
@@ -822,6 +925,8 @@ function normalise(s: ScreenState & { known?: Record<string, { name: string; dev
   s.controllersAbsentSince ??= null;
   s.emptySince ??= null;
   s.away ??= {};
+  s.playlist ??= s.item ? [s.item] : [];
+  s.autoAdvance ??= true;
   s.failedPasswords ??= {};
   return s;
 }

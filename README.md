@@ -85,7 +85,7 @@ Tasks are worked through in order and checked off as they are completed. Windows
 | 2.7   | Viewer list                       | Side panel: Host / Acting host / Co-host #n / roles, device, ping, mute icon; away co-hosts listed | ✅     |
 | 2.8   | Host controls the screen          | The host has full control by default                                                    | ✅     |
 | 2.9   | Viewer cap                        | 2–25 (default 10), chosen when creating; enforced by the theatre                        | ✅     |
-| 2.10  | Screen settings                   | Name, visibility, password, hide, max viewers, devices done; buffering policy, auto-advance pending | 🟨    |
+| 2.10  | Screen settings                   | Name, visibility, password, hide, max viewers, devices, auto-advance done; buffering policy pending | 🟨    |
 | 2.11  | Screen lifecycle                  | Empty screen closes after 5 min; host + co-hosts absent 15 min closes it; host can close it | ✅     |
 
 ### 3. Identity & Reconnect (no accounts)
@@ -172,7 +172,7 @@ Tasks are worked through in order and checked off as they are completed. Windows
 | #     | Task                              | Details                                                                                 | Status |
 | ----- | --------------------------------- | --------------------------------------------------------------------------------------- | ------ |
 | 10.1  | Windows: libmpv integration       | Embedded in WinUI 3 via a child HWND; overlays via windowed popups (prototype works)    | 🟨     |
-| 10.2  | Core playback                     | Play/pause/seek done and synced; stop/next/previous pending                             | 🟨     |
+| 10.2  | Core playback                     | Play/pause/seek, previous/next; stops at the end of the last item                       | ✅      |
 | 10.3  | Smooth playback-rate control      | libmpv `speed` + scaletempo2 pitch correction, driven by the sync engine                | ✅      |
 | 10.4  | Audio track selection             | Choose among a file's audio tracks                                                      | ⬜     |
 | 10.5  | Fullscreen                        | Windows                                                                                 | ⬜     |
@@ -195,7 +195,7 @@ Tasks are worked through in order and checked off as they are completed. Windows
 | 11.10 | Host re-anchor                    | Host sends a fresh anchor if its own drift exceeds 0.25 s                               | ✅     |
 | 11.11 | Late join / reconnect catch-up    | Clock burst, snapshot, seek                                                             | ✅     |
 | 11.12 | Buffering policy                  | Keep playing (default) / Wait for everyone, with host override                          | ⬜     |
-| 11.13 | Playlist transitions              | Auto-advance; waiting state for viewers whose copy ends early                           | ⬜     |
+| 11.13 | Playlist transitions              | Theatre ends items on its alarm (host's duration); shorter copies wait, longer ones move on | ✅     |
 | 11.14 | Ready check                       | Prompt, live tally, 30 s timeout                                                        | ⬜     |
 | 11.15 | Personal sync offset              | Local ±ms nudge                                                                         | ⬜     |
 
@@ -204,20 +204,20 @@ Tasks are worked through in order and checked off as they are completed. Windows
 | #     | Task                              | Details                                                                                 | Status |
 | ----- | --------------------------------- | --------------------------------------------------------------------------------------- | ------ |
 | 12.1  | Pick a single local file          | Each viewer picks their own copy                                                        | ✅     |
-| 12.2  | Pick a local folder               | The folder's media becomes the play order                                               | ⬜     |
-| 12.3  | Multi-select local files          | Alternative to picking a folder                                                         | ⬜     |
-| 12.4  | Default order A–Z                 | Natural sort                                                                            | ⬜     |
-| 12.5  | Host-defined order                | Drag-and-drop reorder                                                                   | ⬜     |
-| 12.6  | Local item mapping                | Auto-match by duration then name; manual remap                                          | ⬜     |
-| 12.7  | Mismatch check: duration first    | Tolerance max(2 s, 0.5%)                                                                | ⬜     |
-| 12.8  | Mismatch check: filename second   | Normalised comparison                                                                   | ⬜     |
-| 12.9  | Mismatch indicator                | Warning only; never blocks playback                                                     | ⬜     |
-| 12.10 | Privacy of local files            | Only name and duration are shared, never paths or contents                              | ⬜     |
+| 12.2  | Pick a local folder               | Add folder: its media files, natural-sorted                                             | ✅     |
+| 12.3  | Multi-select local files          | Add files (multi-select)                                                                | ✅     |
+| 12.4  | Default order A–Z                 | Natural sort, case-insensitive (`EP 2` before `EP 10`)                                  | ✅     |
+| 12.5  | Host-defined order                | Move up/down from the item menu; drag-and-drop pending                                  | 🟨    |
+| 12.6  | Local item mapping                | Auto-match (duration first, then name); "Choose my file…" and "Match my files…"         | ✅     |
+| 12.7  | Mismatch check: duration first    | Tolerance max(2 s, 0.5%)                                                                | ✅     |
+| 12.8  | Mismatch check: filename second   | Ignores case, extension and . _ - separators                                            | ✅     |
+| 12.9  | Mismatch indicator                | ⚠ in the playlist and overlay; playback continues                                       | ✅     |
+| 12.10 | Privacy of local files            | Only file name and duration are sent                                                    | ✅     |
 | 12.11 | External media: YouTube           | Official IFrame API in a WebView                                                        | ⬜     |
 | 12.12 | YouTube sync rules                | No rate correction; seek-based sync; wait for everyone at the end                       | ⬜     |
-| 12.13 | External media: direct URL        | `.mp4`, `.mkv`, `.avi`, … streamed directly from the URL by each viewer                 | ⬜     |
-| 12.14 | Mixed playlists                   | Local and external items together                                                       | ⬜     |
-| 12.15 | Auto-distribute external items    | External items reach every viewer automatically                                         | ⬜     |
+| 12.13 | External media: direct URL        | Add link…; every viewer streams it with libmpv                                          | ✅     |
+| 12.14 | Mixed playlists                   | Local and link items mixed; YouTube pending                                             | 🟨    |
+| 12.15 | Auto-distribute external items    | External items reach every viewer automatically                                         | ✅     |
 | 12.16 | Resume position                   | Per-file last position (local only)                                                     | ⬜     |
 
 ### 13. Codec & Format Support

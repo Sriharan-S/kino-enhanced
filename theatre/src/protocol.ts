@@ -72,6 +72,16 @@ export interface ScreenInfo {
   hidden: boolean;
   maxViewers: number;
   showDevices: boolean;
+  /** Move to the next playlist item when the current one ends. */
+  autoAdvance: boolean;
+}
+
+/** A playlist item before the theatre assigns its id. Local files share only name and duration (§13.2). */
+export interface NewItem {
+  kind: "local" | "url";
+  name: string;
+  duration: number | null;
+  url?: string;
 }
 
 /** A co-host in priority order, present or not (viewer lists only include who is online). */
@@ -88,7 +98,12 @@ export type ClientMessage =
   | { type: "play"; data: Record<string, never> }
   | { type: "pause"; data: Record<string, never> }
   | { type: "seek"; data: { to: number } }
-  | { type: "load"; data: { kind: "local" | "url"; name: string; duration: number | null; url?: string } }
+  | { type: "load"; data: NewItem }
+  | { type: "playlist.add"; data: { items: NewItem[]; at?: number } }
+  | { type: "playlist.remove"; data: { id: string } }
+  | { type: "playlist.move"; data: { id: string; to: number } }
+  | { type: "playlist.play"; data: { id: string } }
+  | { type: "skip"; data: { direction: "next" | "previous" } }
   | { type: "reanchor"; data: { position: number; at: number } }
   | { type: "buffering"; data: { value: boolean } }
   | { type: "rtt"; data: { value: number } }
@@ -106,7 +121,7 @@ export type ClientMessage =
   | { type: "leave"; data: Record<string, never> }
   | {
       type: "settings.update";
-      data: { name?: string; visibility?: Visibility; password?: string; hidden?: boolean; maxViewers?: number; showDevices?: boolean };
+      data: { name?: string; visibility?: Visibility; password?: string; hidden?: boolean; maxViewers?: number; showDevices?: boolean; autoAdvance?: boolean };
     }
   | { type: "code.regenerate"; data: Record<string, never> };
 
@@ -133,6 +148,7 @@ export type ServerMessage =
         viewers: ViewerInfo[];
         roles: Role[];
         coHosts: CoHostInfo[];
+        playlist: Item[];
         item: Item | null;
         anchor: Anchor;
         serverTime: number;
@@ -145,6 +161,7 @@ export type ServerMessage =
   | { type: "roles"; data: Role[] }
   | { type: "cohosts"; data: CoHostInfo[] }
   | { type: "screen"; data: ScreenInfo }
+  | { type: "playlist"; data: Item[] }
   | { type: "error"; data: { code: ErrorCode; message: string } };
 
 // ---- Validation ----------------------------------------------------------------------
@@ -210,6 +227,19 @@ function permissions(v: unknown, field = "permissions"): Permission[] {
   return [...new Set(v as Permission[])];
 }
 
+function itemId(v: unknown): string {
+  if (typeof v !== "string" || !/^i[0-9]{1,9}$/.test(v)) throw new ProtocolError("bad_request", "id must be an item id");
+  return v;
+}
+
+function newItem(d: Record<string, unknown>): NewItem {
+  if (d.kind !== "local" && d.kind !== "url") throw new ProtocolError("bad_request", "kind must be local or url");
+  const duration = d.duration === null || d.duration === undefined ? null : num(d.duration, "duration", 0, 1e7);
+  const url = d.kind === "url" ? str(d.url, "url", LIMITS.url) : undefined;
+  if (url !== undefined && !/^https?:\/\//i.test(url)) throw new ProtocolError("bad_request", "url must be http(s)");
+  return { kind: d.kind, name: cleanName(d.name, "name", LIMITS.itemName), duration, ...(url === undefined ? {} : { url }) };
+}
+
 function bool(v: unknown, field: string): boolean {
   if (typeof v !== "boolean") throw new ProtocolError("bad_request", `${field} must be boolean`);
   return v;
@@ -251,13 +281,23 @@ export function parseClientMessage(raw: string | ArrayBuffer): ClientMessage {
       return { type: msg.type, data: {} };
     case "seek":
       return { type: "seek", data: { to: num(d.to, "to", 0, 1e7) } };
-    case "load": {
-      if (d.kind !== "local" && d.kind !== "url") throw new ProtocolError("bad_request", "kind must be local or url");
-      const duration = d.duration === null || d.duration === undefined ? null : num(d.duration, "duration", 0, 1e7);
-      const url = d.kind === "url" ? str(d.url, "url", LIMITS.url) : undefined;
-      if (url !== undefined && !/^https?:\/\//i.test(url)) throw new ProtocolError("bad_request", "url must be http(s)");
-      return { type: "load", data: { kind: d.kind, name: cleanName(d.name, "name", LIMITS.itemName), duration, url } };
+    case "load":
+      return { type: "load", data: newItem(d) };
+    case "playlist.add": {
+      if (!Array.isArray(d.items) || d.items.length < 1 || d.items.length > 200) throw new ProtocolError("bad_request", "items must be 1-200 items");
+      return {
+        type: "playlist.add",
+        data: { items: d.items.map((it) => newItem(isObj(it) ? it : {})), at: d.at === undefined ? undefined : num(d.at, "at", 0, 1000) },
+      };
     }
+    case "playlist.remove":
+    case "playlist.play":
+      return { type: msg.type, data: { id: itemId(d.id) } };
+    case "playlist.move":
+      return { type: "playlist.move", data: { id: itemId(d.id), to: num(d.to, "to", 0, 1000) } };
+    case "skip":
+      if (d.direction !== "next" && d.direction !== "previous") throw new ProtocolError("bad_request", "direction must be next or previous");
+      return { type: "skip", data: { direction: d.direction } };
     case "reanchor":
       return { type: "reanchor", data: { position: num(d.position, "position", 0, 1e7), at: num(d.at, "at") } };
     case "buffering":
@@ -320,6 +360,7 @@ export function parseClientMessage(raw: string | ArrayBuffer): ClientMessage {
       if (d.hidden !== undefined) out.hidden = bool(d.hidden, "hidden");
       if (d.maxViewers !== undefined) out.maxViewers = Math.round(num(d.maxViewers, "maxViewers", 2, LIMITS.maxViewersCap));
       if (d.showDevices !== undefined) out.showDevices = bool(d.showDevices, "showDevices");
+      if (d.autoAdvance !== undefined) out.autoAdvance = bool(d.autoAdvance, "autoAdvance");
       return { type: "settings.update", data: out };
     }
     default:

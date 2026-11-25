@@ -274,6 +274,47 @@ assert.equal((await http("GET", `/resolve/${recoded.code}`)).body.screenId, scre
 step(`code regenerated ${code} → ${recoded.code}; old code no longer resolves`);
 void eveWelcome;
 
+// --- playlist (§13) and auto-advance (§14.12)
+eve.send("playlist.add", { items: [{ kind: "local", name: "Nope.mkv", duration: 10 }] });
+assert.equal((await eve.next("error")).code, "forbidden");
+host2.send("playlist.add", {
+  items: [
+    { kind: "local", name: "Short A.mkv", duration: 3 },
+    { kind: "local", name: "Long B.mkv", duration: 600 },
+    { kind: "url", name: "Clip C", duration: null, url: "https://example.com/c.mp4" },
+  ],
+});
+const pl = await eve.next("playlist", (l) => l.some((i) => i.name === "Clip C"));
+const [A, B, C] = ["Short A.mkv", "Long B.mkv", "Clip C"].map((n) => pl.find((i) => i.name === n));
+assert.ok(!("path" in A), "only name and duration are shared");
+step(`playlist: viewers can't add; host adds 3 items (${pl.length} total)`);
+
+host2.send("playlist.play", { id: A.id });
+await eve.next("anchor", (a) => a.itemId === A.id && a.state === "playing");
+const advanced = await eve.next("anchor", (a) => a.itemId === B.id && a.state === "playing", 8000);
+assert.equal(advanced.position, 0);
+step("auto-advance: 3 s item ends on the theatre's alarm and the next one starts at 0");
+
+host2.send("skip", { direction: "next" });
+await eve.next("anchor", (a) => a.itemId === C.id);
+host2.send("skip", { direction: "next" });
+assert.match((await host2.next("error")).message, /last item/);
+host2.send("playlist.move", { id: C.id, to: 0 });
+await eve.next("playlist", (l) => l[0].id === C.id);
+host2.send("playlist.remove", { id: C.id });
+await eve.next("playlist", (l) => !l.some((i) => i.id === C.id));
+// Order is now [C, EP 01, A, B]; removing current C must move on to the item after it.
+const afterRemove = await eve.next("item", (it) => it?.name === "EP 01.mkv");
+step(`skip, reorder and remove; removing the current item moves on to "${afterRemove.name}"`);
+
+host2.send("settings.update", { autoAdvance: false });
+await eve.next("screen", (sc) => sc.autoAdvance === false);
+host2.send("playlist.play", { id: A.id });
+await eve.next("anchor", (a) => a.itemId === A.id && a.state === "playing");
+const stopped = await eve.next("anchor", (a) => a.itemId === A.id && a.state === "paused", 8000);
+assert.equal(stopped.position, 3);
+step("auto-advance off: playback stops exactly at the end of the item");
+
 // --- transfer ownership (§7.5) and close
 host2.send("host.transfer", { viewer: carolId });
 const transferred = await carol.next("viewers", (l) => me(l, carolId)?.isHost === true);

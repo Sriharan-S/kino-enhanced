@@ -63,7 +63,12 @@ Envelope: `{ "type": "<type>", "data": { ... } }`. Messages are limited to 16 Ki
 | `play` | `{}` | `playback.toggle` | Scheduled start: `at = now + lead`. |
 | `pause` | `{}` | `playback.toggle` | Position frozen at the theatre's expected position. |
 | `seek` | `{ to }` | `playback.seek` | Keeps play/pause state. |
-| `load` | `{ kind: "local"|"url", name, duration, url? }` | `playlist.add` / `playlist.add_external` (url) | Sets the current item and resets the anchor to paused at 0. |
+| `load` | `NewItem` | `playlist.add` / `playlist.add_external` (url) | "Open now": inserts after the current item, makes it current, paused at 0. |
+| `playlist.add` | `{ items: NewItem[], at? }` | `playlist.add` (local) / `playlist.add_external` (url) | Inserts at index `at` (default: end). If nothing is current, the first new item becomes current. At most 200 items. |
+| `playlist.remove` | `{ id }` | `playlist.remove` | Removing the current item moves on to the next one (else the previous), keeping play/pause. |
+| `playlist.move` | `{ id, to }` | `playlist.reorder` | Moves the item to index `to`. |
+| `playlist.play` | `{ id }` | `playback.skip` | Jumps to that item and plays it from 0 (scheduled start). |
+| `skip` | `{ direction: "next"\|"previous" }` | `playback.skip` | Errors at either end; there is no wrap-around. |
 | `reanchor` | `{ position, at }` | timeline authority | The host, or the acting host while the host is away. Real position at theatre time `at` (clamped to ±2 s). |
 | `roles.create` | `{ name, colour, permissions, position? }` | `roles.manage` | New role ranked below your own (default: just above the highest role you can manage). |
 | `roles.update` | `{ id, name?, colour?, permissions?, position? }` | `roles.manage` | Roles below your own. Co-host is fixed; for Viewer only `permissions` can change. |
@@ -76,7 +81,7 @@ Envelope: `{ "type": "<type>", "data": { ... } }`. Messages are limited to 16 Ki
 | `cohosts.set` | `{ viewers }` | host only | Co-hosts in priority order (first = takes over first). |
 | `host.transfer` | `{ viewer }` | host only | New host must be present. The old host becomes co-host #1. |
 | `screen.close` | `{}` | host only | Everyone gets `closed`; the screen is deleted. |
-| `settings.update` | `{ name?, visibility?, password?, hidden?, maxViewers?, showDevices? }` | `screen.settings` | Going private needs a password (new, or the existing one). Going public clears password and hidden. Viewers already in keep their place. |
+| `settings.update` | `{ name?, visibility?, password?, hidden?, maxViewers?, showDevices?, autoAdvance? }` | `screen.settings` | Going private needs a password (new, or the existing one). Going public clears password and hidden. Viewers already in keep their place. |
 | `code.regenerate` | `{}` | `screen.invite` | New code; the old code and links stop working at once. Connected viewers aren't affected. |
 | `leave` | `{}` | joined | Explicit leave: no reconnect grace. |
 
@@ -88,10 +93,11 @@ and you can only act on roles and viewers ranked strictly **below** you: host 10
 
 | Type | Data | When |
 |---|---|---|
-| `welcome` | `{ self, screen, viewers, roles, coHosts, item, anchor, serverTime }` | Reply to a successful `hello` |
+| `welcome` | `{ self, screen, viewers, roles, coHosts, playlist, item, anchor, serverTime }` | Reply to a successful `hello` |
 | `pong` | `{ t0, ts }` | Reply to `ping`. `ts` is theatre time when it was handled. |
 | `anchor` | `Anchor` | Any timeline change |
 | `item` | `Item \| null` | Current item changed |
+| `playlist` | `Item[]` | Items added, removed or reordered |
 | `viewers` | `ViewerInfo[]` | Anyone joins or leaves, or their RTT, buffering, roles, co-host status or permissions change |
 | `roles` | `Role[]` | Roles were created, edited or deleted |
 | `screen` | `ScreenInfo` | Settings or code changed |
@@ -113,7 +119,9 @@ ViewerInfo = { id: string, name: string, device: Device|null, isHost: boolean, r
                permissions: Permission[], // effective, computed by the theatre
                connected: boolean         // false while in the 60 s reconnect grace period
              }
-ScreenInfo = { code: string, name: string, visibility: "public"|"private", hidden: boolean, maxViewers: number, showDevices: boolean }
+ScreenInfo = { code: string, name: string, visibility: "public"|"private", hidden: boolean, maxViewers: number, showDevices: boolean,
+               autoAdvance: boolean }
+NewItem    = { kind: "local"|"url", name: string, duration: number|null, url?: string }   // local: file name only, never a path
 Role       = { id: string, name: string, colour: string|null, position: number, permissions: Permission[], builtin: boolean }
 Permission = "playback.toggle" | "playback.seek" | "playback.skip" | "playlist.add" | "playlist.add_external"
            | "playlist.remove" | "playlist.reorder" | "subtitles.share" | "screen.ready_check" | "screen.settings"
@@ -146,6 +154,10 @@ Clients ignore an anchor whose `seq` is lower than the last one they applied.
 **Reconnect (§6.4):** a viewer whose connection drops (without `leave`) stays in the list with `connected: false` for
 60 s and keeps their seat. Reconnecting with the same token restores everything, and no password is needed. Kicked or
 banned viewers get no grace.
+
+**End of an item (§14.12):** the theatre knows the current item's duration (the host's file is the reference), so it
+schedules the end itself on its alarm. Playback continues even if the host is away. With `autoAdvance`, the next item starts
+at 0 with a scheduled start. Otherwise, or at the last item, playback pauses exactly at the end.
 
 **Host away (§7.2):** when the host disconnects, the highest-priority co-host who is present becomes acting host
 (`actingHost: true`) and the timeline authority (it re-anchors). When the host reconnects with the same token, it takes back
